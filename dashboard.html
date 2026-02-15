@@ -189,10 +189,37 @@ th,td{
 
 <script type="module">
 
-/* 🔥 USE SHARED FIREBASE INSTANCE */
-import { auth } from "./js/firebase-init.js";
-import { onAuthStateChanged, signOut } 
+import { initializeApp, getApps } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import { 
+  getAuth,
+  onAuthStateChanged,
+  signOut,
+  setPersistence,
+  browserLocalPersistence
+} 
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+/* FIREBASE CONFIG (SAME AS YOUR OLD) */
+const firebaseConfig = {
+  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
+  authDomain: "login-65d4b.firebaseapp.com",
+  projectId: "login-65d4b",
+  storageBucket: "login-65d4b.appspot.com",
+  messagingSenderId: "239979806578",
+  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
+};
+
+/* PREVENT DOUBLE INIT */
+const app = getApps().length === 0 
+  ? initializeApp(firebaseConfig)
+  : getApps()[0];
+
+const auth = getAuth(app);
+
+/* KEEP SESSION */
+await setPersistence(auth, browserLocalPersistence);
 
 /* AUTH CHECK */
 onAuthStateChanged(auth, (user) => {
@@ -208,6 +235,7 @@ onAuthStateChanged(auth, (user) => {
   document.getElementById("topUserImage").src =
     user.photoURL ||
     "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+
 });
 
 /* LOGOUT */
@@ -220,3 +248,4 @@ window.logout = async function(){
 
 </body>
 </html>
+
