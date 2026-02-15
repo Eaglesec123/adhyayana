@@ -186,92 +186,130 @@ color:white;
 
 <script type="module">
 
-import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { auth } from "./js/firebase.js";
+import { initializeApp } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-let userProfile;
+import { 
+  getAuth, 
+  signOut, 
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+/* SAME FIREBASE CONFIG (NOT CHANGED) */
+const firebaseConfig = {
+  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
+  authDomain: "login-65d4b.firebaseapp.com",
+  projectId: "login-65d4b",
+  storageBucket: "login-65d4b.appspot.com",
+  messagingSenderId: "239979806578",
+  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+/* 🔥 CRITICAL FIX: Keep user session */
+await setPersistence(auth, browserLocalPersistence);
+
+let userProfile = null;
+
+/* WAIT for Firebase to load properly */
 onAuthStateChanged(auth, (user) => {
 
-if (!user) {
-window.location.href = "login.html";
-} else {
+  if (!user) {
+    // Small delay prevents instant false redirect
+    setTimeout(() => {
+      if (!auth.currentUser) {
+        window.location.replace("login.html");
+      }
+    }, 800);
+    return;
+  }
 
-let storedProfile = JSON.parse(localStorage.getItem("currentUser"));
+  let storedProfile = JSON.parse(localStorage.getItem("currentUser"));
 
-if (!storedProfile || storedProfile.uid !== user.uid) {
-storedProfile = {
-uid: user.uid,
-name: user.email.split("@")[0],
-email: user.email,
-category: "Not Set",
-skills: "Not Set",
-address: "Not Set",
-photo: "images/user.png"
-};
-localStorage.setItem("currentUser", JSON.stringify(storedProfile));
-}
+  if (!storedProfile || storedProfile.uid !== user.uid) {
+    storedProfile = {
+      uid: user.uid,
+      name: user.displayName || user.email.split("@")[0],
+      email: user.email,
+      category: "Not Set",
+      skills: "Not Set",
+      address: "Not Set",
+      photo: user.photoURL || "images/user.png"
+    };
 
-userProfile = storedProfile;
-loadProfile();
-}
+    localStorage.setItem("currentUser", JSON.stringify(storedProfile));
+  }
 
+  userProfile = storedProfile;
+  loadProfile();
 });
 
+/* LOAD PROFILE */
 function loadProfile(){
-document.getElementById("viewName").innerText=userProfile.name;
-document.getElementById("viewEmail").innerText=userProfile.email;
-document.getElementById("viewCategory").innerText=userProfile.category;
-document.getElementById("viewSkills").innerText=userProfile.skills;
-document.getElementById("viewAddress").innerText=userProfile.address;
-document.getElementById("profileImage").src=userProfile.photo;
+  document.getElementById("viewName").innerText = userProfile.name;
+  document.getElementById("viewEmail").innerText = userProfile.email;
+  document.getElementById("viewCategory").innerText = userProfile.category;
+  document.getElementById("viewSkills").innerText = userProfile.skills;
+  document.getElementById("viewAddress").innerText = userProfile.address;
+  document.getElementById("profileImage").src = userProfile.photo;
 }
 
+/* EDIT MODE */
 window.enableEdit = function(){
-document.getElementById("viewMode").classList.add("hidden");
-document.getElementById("editMode").classList.remove("hidden");
+  document.getElementById("viewMode").classList.add("hidden");
+  document.getElementById("editMode").classList.remove("hidden");
 
-nameInput.value=userProfile.name;
-categoryInput.value=userProfile.category;
-skillsInput.value=userProfile.skills;
-addressInput.value=userProfile.address;
-}
+  nameInput.value = userProfile.name;
+  categoryInput.value = userProfile.category;
+  skillsInput.value = userProfile.skills;
+  addressInput.value = userProfile.address;
+};
 
+/* SAVE PROFILE */
 window.saveProfile = function(){
 
-userProfile.name=nameInput.value;
-userProfile.category=categoryInput.value;
-userProfile.skills=skillsInput.value;
-userProfile.address=addressInput.value;
+  userProfile.name = nameInput.value;
+  userProfile.category = categoryInput.value;
+  userProfile.skills = skillsInput.value;
+  userProfile.address = addressInput.value;
 
-localStorage.setItem("currentUser",JSON.stringify(userProfile));
+  localStorage.setItem("currentUser", JSON.stringify(userProfile));
 
-document.getElementById("editMode").classList.add("hidden");
-document.getElementById("viewMode").classList.remove("hidden");
+  document.getElementById("editMode").classList.add("hidden");
+  document.getElementById("viewMode").classList.remove("hidden");
 
-loadProfile();
-alert("Profile Updated!");
-}
-
-document.getElementById("photoInput").addEventListener("change",function(){
-const file=this.files[0];
-const reader=new FileReader();
-reader.onload=function(e){
-userProfile.photo=e.target.result;
-localStorage.setItem("currentUser",JSON.stringify(userProfile));
-loadProfile();
+  loadProfile();
+  alert("Profile Updated!");
 };
-reader.readAsDataURL(file);
+
+/* PHOTO UPLOAD */
+document.getElementById("photoInput").addEventListener("change", function(){
+  const file = this.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    userProfile.photo = e.target.result;
+    localStorage.setItem("currentUser", JSON.stringify(userProfile));
+    loadProfile();
+  };
+  reader.readAsDataURL(file);
 });
 
-window.logout = function(){
-signOut(auth).then(()=>{
-localStorage.removeItem("currentUser");
-window.location.href="login.html";
-});
-}
+/* LOGOUT */
+window.logout = async function(){
+  await signOut(auth);
+  localStorage.removeItem("currentUser");
+  window.location.replace("login.html");
+};
 
 </script>
 
+
 </body>
 </html>
+
