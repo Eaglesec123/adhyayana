@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login | Adhyayana</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;600&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+
+body{
+  height:100vh;
+  background:#05070d;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  overflow:hidden;
+}
+
+body::before,
+body::after{
+  content:"";
+  position:absolute;
+  width:600px;
+  height:600px;
+  border:1px solid rgba(255,255,255,0.05);
+  border-radius:20px;
+}
+
+body::before{
+  left:-300px;
+  top:50%;
+  transform:translateY(-50%);
+}
+
+body::after{
+  right:-300px;
+  top:50%;
+  transform:translateY(-50%);
+}
+
+.card{
+  width:380px;
+  background:#0d1117;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:20px;
+  padding:40px;
+  text-align:center;
+  box-shadow:0 0 40px rgba(0,0,0,0.6);
+}
+
+.logo{
+  width:50px;
+  height:50px;
+  background:#111827;
+  border-radius:12px;
+  margin:0 auto 20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:600;
+  color:#4f8cff;
+}
+
+.card h2{
+  margin-bottom:8px;
+  font-weight:600;
+}
+
+.sub{
+  color:#888;
+  font-size:14px;
+  margin-bottom:25px;
+}
+
+.input-group{
+  margin-bottom:15px;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:#0b0f14;
+  color:#fff;
+}
+
+input::placeholder{
+  color:#666;
+}
+
+input:focus{
+  outline:none;
+  border:1px solid #2f81f7;
+}
+
+.login-btn{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:10px;
+  background:#1f6feb;
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.login-btn:hover{
+  background:#2f81f7;
+}
+
+.divider{
+  margin:25px 0;
+  display:flex;
+  align-items:center;
+  color:#666;
+  font-size:13px;
+}
+
+.divider::before,
+.divider::after{
+  content:"";
+  flex:1;
+  height:1px;
+  background:rgba(255,255,255,0.08);
+}
+
+.divider span{
+  margin:0 10px;
+}
+
+.socials{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.social-btn{
+  flex:1;
+  padding:12px;
+  background:#111827;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px;
+  cursor:pointer;
+  color:#fff;
+  transition:0.2s;
+}
+
+.social-btn:hover{
+  border:1px solid #2f81f7;
+}
+
+.error{
+  margin-top:10px;
+  color:#ff6b6b;
+  font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<div class="logo">A</div>
+
+<h2>Welcome Back</h2>
+<p class="sub">Don't have an account yet? Sign up</p>
+
+<form id="loginForm">
+
+<div class="input-group">
+<input type="email" id="email" placeholder="email address" required>
+</div>
+
+<div class="input-group">
+<input type="password" id="password" placeholder="Password" required>
+</div>
+
+<button type="submit" class="login-btn">Login</button>
+
+</form>
+
+<div class="divider"><span>OR</span></div>
+
+<div class="socials">
+<button class="social-btn"></button>
+<button class="social-btn" id="googleLogin">G</button>
+<button class="social-btn">X</button>
+</div>
+
+<p id="error" class="error"></p>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged
+}
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
+  authDomain: "login-65d4b.firebaseapp.com",
+  projectId: "login-65d4b",
+  storageBucket: "login-65d4b.appspot.com",
+  messagingSenderId: "239979806578",
+  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+/* EMAIL LOGIN */
+loginForm.addEventListener("submit", async(e)=>{
+  e.preventDefault();
+  error.innerText="";
+  try{
+    await signInWithEmailAndPassword(auth,email.value,password.value);
+    window.location.replace("dashboard.html");
+  }catch(err){
+    error.innerText=err.message;
+  }
+});
+
+/* GOOGLE LOGIN (LOCALHOST SAFE) */
+const provider = new GoogleAuthProvider();
+
+googleLogin.addEventListener("click", async()=>{
+  error.innerText="";
+  try{
+    await signInWithPopup(auth, provider);
+  }catch(err){
+    error.innerText = err.message;
+  }
+});
+
+/* Detect login and redirect */
+onAuthStateChanged(auth, (user)=>{
+  if(user){
+    localStorage.setItem("currentUser", JSON.stringify({
+      uid:user.uid,
+      email:user.email,
+      name:user.displayName
+    }));
+
+    window.location.replace("dashboard.html");
+  }
+});
+
+</script>
+
+</body>
+</html>

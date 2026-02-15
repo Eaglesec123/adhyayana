@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>My Courses</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{margin:0;font-family:Arial;background:#0f172a;color:white;}
+.app{display:flex;min-height:100vh;}
+.sidebar{width:240px;background:#1e293b;padding:20px;}
+.nav-link{display:block;padding:12px;margin-bottom:10px;color:#cbd5e1;text-decoration:none;}
+.nav-link:hover{background:#334155;}
+.main{flex:1;padding:30px;}
+.card{background:#1e293b;padding:20px;border-radius:10px;margin-bottom:15px;}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div class="sidebar">
+    <h3>Adhyayana</h3>
+    <a href="dashboard.html" class="nav-link">Dashboard</a>
+    <a href="add-course.html" class="nav-link">Add Course</a>
+    <a href="my-courses.html" class="nav-link">My Courses</a>
+    <a href="login.html" class="nav-link">Logout</a>
+  </div>
+
+  <div class="main">
+    <h2>My Courses</h2>
+
+    <div class="card">
+      Your uploaded courses will appear here.
+    </div>S
+
+  </div>
+
+</div>
+
+<script type="module" src="js/my-courses.js"></script>
+
+</body>
+</html>

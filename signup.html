@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signup | Adhyayana</title>
+
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+
+<body class="auth-body">
+
+<div class="auth-wrapper">
+
+  <!-- LOGO -->
+  <div class="auth-logo">
+    <img src="logo.png" alt="Adhyayana Logo">
+    <h2>ADHYAYANA</h2>
+  </div>
+
+  <!-- CARD -->
+  <div class="auth-card auth-animate login-card">
+
+    <h3>Create Account 🚀</h3>
+    <p class="auth-sub">Join and start learning & earning</p>
+
+    <form class="signup-form">
+
+      <!-- NAME -->
+      <input type="text" id="signupName" placeholder="Full Name" required>
+
+      <!-- EMAIL -->
+      <input type="email" id="signupEmail" placeholder="Email Address" required>
+
+      <!-- PASSWORD -->
+      <div class="password-field">
+        <input type="password" id="signupPassword" placeholder="Password" required>
+        <span class="toggle-password" id="toggleSignupPassword">👁</span>
+      </div>
+
+      <button class="btn primary full">
+        Create Account
+      </button>
+
+    </form>
+
+    <div class="divider">OR</div>
+
+    <!-- GOOGLE SIGNUP -->
+    <button id="googleSignup" class="google-btn" type="button">
+      <img src="images/google.png" alt="Google">
+      <span>Continue with Google</span>
+    </button>
+
+    <div class="auth-footer">
+      <p class="auth-switch">
+        Already have an account?
+        <a href="login.html">Login</a>
+      </p>
+      <a href="index.html" class="back-home">← Back to Home</a>
+    </div>
+
+  </div>
+</div>
+
+<script type="module" src="js/signup-auth.js"></script>
+<script src="js/password-toggle.js"></script>
+
+</body>
+</html>

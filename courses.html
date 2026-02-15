@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Courses | Adhyayana</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{
+  font-family:Arial;
+  background:#f4f6f9;
+}
+.container{
+  width:90%;
+  margin:auto;
+}
+.card{
+  background:white;
+  padding:20px;
+  margin:20px 0;
+  border-radius:12px;
+}
+.card img{
+  max-width:200px;
+  border-radius:10px;
+}
+video{
+  width:100%;
+  margin-top:10px;
+}
+</style>
+</head>
+<body>
+
+<h1 style="text-align:center;">📚 ADHYAYANA Educational</h1>
+<div class="container" id="courseContainer"></div>
+
+<script>
+const supabaseUrl = "YOUR_SUPABASE_URL";
+const supabaseKey = "YOUR_PUBLIC_ANON_KEY";
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+async function loadCourses(){
+  const { data } = await supabase
+    .from("courses")
+    .select("*")
+    .order("created_at", { ascending:false });
+
+  const container=document.getElementById("courseContainer");
+  container.innerHTML="";
+
+  data.forEach(course=>{
+    container.innerHTML+=`
+      <div class="card">
+        <h2>${course.title}</h2>
+        <p>${course.description}</p>
+        <p><b>Category:</b> ${course.category}</p>
+        ${course.thumbnail_url ? `<img src="${course.thumbnail_url}">` : ""}
+        <video controls>
+          <source src="${course.video_url}" type="video/mp4">
+        </video>
+        <h4>Topics:</h4>
+        ${course.topics ? course.topics.map(t=>`<div>- ${t}</div>`).join("") : ""}
+      </div>
+    `;
+  });
+}
+
+loadCourses();
+</script>
+
+</body>
+</html>

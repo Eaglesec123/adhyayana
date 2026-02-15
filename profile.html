@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile | Adhyayana</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,#0f172a,#1e293b);
+color:white;
+min-height:100vh;
+display:flex;
+}
+
+.sidebar{
+width:240px;
+background:#111827;
+padding:25px;
+}
+
+.brand{
+text-align:center;
+margin-bottom:40px;
+}
+
+.brand img{
+width:70px;
+margin-bottom:10px;
+}
+
+.brand h2{
+font-weight:600;
+}
+
+.nav-link{
+display:block;
+padding:12px;
+margin:10px 0;
+color:#cbd5e1;
+text-decoration:none;
+border-radius:8px;
+transition:.3s;
+}
+
+.nav-link:hover{
+background:#2563eb;
+color:white;
+}
+
+.active{
+background:#2563eb;
+color:white;
+}
+
+.logout-btn{
+margin-top:30px;
+width:100%;
+padding:10px;
+border:none;
+border-radius:8px;
+background:#ef4444;
+color:white;
+cursor:pointer;
+}
+
+.main{
+flex:1;
+padding:40px;
+}
+
+.profile-container{
+display:grid;
+grid-template-columns:350px 1fr;
+gap:30px;
+}
+
+.card{
+background:#1e293b;
+padding:30px;
+border-radius:16px;
+box-shadow:0 20px 50px rgba(0,0,0,.4);
+}
+
+.profile-img{
+width:180px;
+height:180px;
+border-radius:50%;
+object-fit:cover;
+border:5px solid #22c55e;
+margin-bottom:15px;
+}
+
+button{
+padding:10px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+margin-top:10px;
+}
+
+.upload-btn{background:#334155;color:white;width:100%;}
+.edit-btn{background:#6366f1;color:white;width:100%;}
+.save-btn{background:#22c55e;color:white;width:100%;}
+
+input{
+width:100%;
+padding:10px;
+margin:8px 0;
+border-radius:6px;
+border:none;
+background:#0f172a;
+color:white;
+}
+
+.hidden{display:none;}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+<div class="brand">
+<img src="logo.png">
+<h2>Adhyayana</h2>
+</div>
+
+<a href="dashboard.html" class="nav-link">Dashboard</a>
+<a href="market.html" class="nav-link">Marketplace</a>
+<a href="profile.html" class="nav-link active">Profile</a>
+
+<button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<h2>My Profile</h2>
+<br>
+
+<div class="profile-container">
+
+<!-- LEFT -->
+<div class="card" style="text-align:center;">
+<img id="profileImage" class="profile-img">
+<input type="file" id="photoInput" hidden accept="image/*">
+
+<button class="upload-btn" onclick="photoInput.click()">Upload Photo</button>
+<button class="edit-btn" onclick="enableEdit()">Edit Profile</button>
+</div>
+
+<!-- RIGHT -->
+<div class="card">
+
+<div id="viewMode">
+<p><strong>Name:</strong> <span id="viewName"></span></p>
+<p><strong>Email:</strong> <span id="viewEmail"></span></p>
+<p><strong>Category:</strong> <span id="viewCategory"></span></p>
+<p><strong>Skills:</strong> <span id="viewSkills"></span></p>
+<p><strong>Address:</strong> <span id="viewAddress"></span></p>
+</div>
+
+<div id="editMode" class="hidden">
+<input type="text" id="nameInput" placeholder="Full Name">
+<input type="text" id="categoryInput" placeholder="Category">
+<input type="text" id="skillsInput" placeholder="Skills">
+<input type="text" id="addressInput" placeholder="Address">
+<button class="save-btn" onclick="saveProfile()">Save Changes</button>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { auth } from "./js/firebase.js";
+
+let userProfile;
+
+onAuthStateChanged(auth, (user) => {
+
+if (!user) {
+window.location.href = "login.html";
+} else {
+
+let storedProfile = JSON.parse(localStorage.getItem("currentUser"));
+
+if (!storedProfile || storedProfile.uid !== user.uid) {
+storedProfile = {
+uid: user.uid,
+name: user.email.split("@")[0],
+email: user.email,
+category: "Not Set",
+skills: "Not Set",
+address: "Not Set",
+photo: "images/user.png"
+};
+localStorage.setItem("currentUser", JSON.stringify(storedProfile));
+}
+
+userProfile = storedProfile;
+loadProfile();
+}
+
+});
+
+function loadProfile(){
+document.getElementById("viewName").innerText=userProfile.name;
+document.getElementById("viewEmail").innerText=userProfile.email;
+document.getElementById("viewCategory").innerText=userProfile.category;
+document.getElementById("viewSkills").innerText=userProfile.skills;
+document.getElementById("viewAddress").innerText=userProfile.address;
+document.getElementById("profileImage").src=userProfile.photo;
+}
+
+window.enableEdit = function(){
+document.getElementById("viewMode").classList.add("hidden");
+document.getElementById("editMode").classList.remove("hidden");
+
+nameInput.value=userProfile.name;
+categoryInput.value=userProfile.category;
+skillsInput.value=userProfile.skills;
+addressInput.value=userProfile.address;
+}
+
+window.saveProfile = function(){
+
+userProfile.name=nameInput.value;
+userProfile.category=categoryInput.value;
+userProfile.skills=skillsInput.value;
+userProfile.address=addressInput.value;
+
+localStorage.setItem("currentUser",JSON.stringify(userProfile));
+
+document.getElementById("editMode").classList.add("hidden");
+document.getElementById("viewMode").classList.remove("hidden");
+
+loadProfile();
+alert("Profile Updated!");
+}
+
+document.getElementById("photoInput").addEventListener("change",function(){
+const file=this.files[0];
+const reader=new FileReader();
+reader.onload=function(e){
+userProfile.photo=e.target.result;
+localStorage.setItem("currentUser",JSON.stringify(userProfile));
+loadProfile();
+};
+reader.readAsDataURL(file);
+});
+
+window.logout = function(){
+signOut(auth).then(()=>{
+localStorage.removeItem("currentUser");
+window.location.href="login.html";
+});
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<button onclick="pay()">Pay Now</button>
+
+<script>
+async function pay(){
+let total=document.getElementById("total").innerText;
+
+let res=await fetch("http://localhost:5000/create-order",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({amount:total})
+});
+
+let order=await res.json();
+
+var options={
+key:"YOUR_RAZORPAY_KEY",
+amount:order.amount,
+currency:"INR",
+order_id:order.id,
+handler:function(response){
+alert("Payment Successful!");
+}
+};
+
+var rzp=new Razorpay(options);
+rzp.open();
+}
+</script>

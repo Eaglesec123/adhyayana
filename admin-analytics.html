@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Analytics</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  font-family:'Inter',sans-serif;
+  background:#f1f5f9;
+  padding:40px;
+}
+
+h2{
+  margin-bottom:30px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:20px;
+  margin-bottom:40px;
+}
+
+.card{
+  background:white;
+  padding:20px;
+  border-radius:14px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.05);
+}
+
+.card h3{
+  margin-bottom:10px;
+}
+
+.big{
+  font-size:24px;
+  font-weight:700;
+}
+
+.chart-box{
+  background:white;
+  padding:20px;
+  border-radius:14px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.05);
+}
+</style>
+</head>
+
+<body>
+
+<h2>📊 Admin Analytics Dashboard</h2>
+
+<div class="grid">
+  <div class="card">
+    <h3>Total Courses</h3>
+    <div class="big" id="totalCourses">0</div>
+  </div>
+
+  <div class="card">
+    <h3>Total Purchases</h3>
+    <div class="big" id="totalPurchases">0</div>
+  </div>
+
+  <div class="card">
+    <h3>Total Revenue</h3>
+    <div class="big" id="totalRevenue">₹ 0</div>
+  </div>
+
+  <div class="card">
+    <h3>Best Seller</h3>
+    <div class="big" id="bestSeller">-</div>
+  </div>
+</div>
+
+<div class="chart-box">
+  <canvas id="revenueChart"></canvas>
+</div>
+
+<script type="module">
+
+import { initializeApp } from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
+import { getFirestore, collection, getDocs }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
+  authDomain: "login-65d4b.firebaseapp.com",
+  projectId: "login-65d4b",
+  storageBucket: "login-65d4b.appspot.com",
+  messagingSenderId: "239979806578",
+  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+loadAnalytics();
+
+async function loadAnalytics(){
+
+  const snapshot = await getDocs(collection(db,"courses"));
+
+  let totalCourses = 0;
+  let totalRevenue = 0;
+  let totalPurchases = 0;
+
+  let revenuePerCourse = {};
+  let purchaseCount = {};
+
+  // Purchased data stored in browser
+  const purchased = JSON.parse(localStorage.getItem("purchased")) || [];
+
+  snapshot.forEach(docSnap=>{
+    totalCourses++;
+    const course = docSnap.data();
+    const id = docSnap.id;
+    const price = Number(course.price || 0);
+
+    // Count purchases
+    let count = purchased.filter(p=>p===id).length;
+
+    totalPurchases += count;
+
+    revenuePerCourse[course.title] = price * count;
+    purchaseCount[course.title] = count;
+
+    totalRevenue += price * count;
+  });
+
+  document.getElementById("totalCourses").innerText = totalCourses;
+  document.getElementById("totalPurchases").innerText = totalPurchases;
+  document.getElementById("totalRevenue").innerText = "₹ " + totalRevenue;
+
+  // Find best seller
+  let bestCourse = "-";
+  let max = 0;
+
+  for(let title in purchaseCount){
+    if(purchaseCount[title] > max){
+      max = purchaseCount[title];
+      bestCourse = title;
+    }
+  }
+
+  document.getElementById("bestSeller").innerText = bestCourse;
+
+  // Chart
+  const ctx = document.getElementById("revenueChart");
+
+  new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:Object.keys(revenuePerCourse),
+      datasets:[{
+        label:'Revenue per Course',
+        data:Object.values(revenuePerCourse),
+        borderWidth:1
+      }]
+    }
+  });
+}
+
+</script>
+
+</body>
+</html>

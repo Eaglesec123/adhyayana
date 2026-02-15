@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Marketplace</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  font-family:'Inter',sans-serif;
+  background:linear-gradient(135deg,#eef2ff,#f8fafc,#e0e7ff);
+  background-size:400% 400%;
+  animation:bgMove 12s ease infinite;
+}
+
+@keyframes bgMove{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+
+/* HEADER */
+.header{
+  background:rgba(15,23,42,0.85);
+  backdrop-filter:blur(15px);
+  color:white;
+  padding:20px 30px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:15px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+}
+
+.header-controls{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+input, select{
+  padding:8px 12px;
+  border-radius:8px;
+  border:none;
+  outline:none;
+}
+
+.cart-icon{
+  cursor:pointer;
+  position:relative;
+  font-weight:600;
+  animation:floatCart 3s ease-in-out infinite;
+}
+
+@keyframes floatCart{
+  0%{transform:translateY(0);}
+  50%{transform:translateY(-5px);}
+  100%{transform:translateY(0);}
+}
+
+.cart-count{
+  position:absolute;
+  top:-8px;
+  right:-10px;
+  background:#ef4444;
+  color:white;
+  font-size:12px;
+  padding:2px 6px;
+  border-radius:50%;
+}
+
+/* GRID */
+.grid{
+  max-width:1200px;
+  margin:40px auto;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:30px;
+  padding:0 20px;
+}
+
+/* CARD */
+.card{
+  background:white;
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 15px 35px rgba(0,0,0,0.08);
+  transition:transform 0.4s ease, box-shadow 0.4s ease;
+  position:relative;
+  transform-style:preserve-3d;
+  opacity:0;
+  transform:translateY(40px);
+  animation:cardFade 0.7s forwards;
+}
+
+.card:hover{
+  transform:rotateX(8deg) rotateY(-8deg) translateY(-10px);
+  box-shadow:0 25px 60px rgba(0,0,0,0.2);
+}
+
+@keyframes cardFade{
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+.card img{
+  width:100%;
+  height:170px;
+  object-fit:cover;
+}
+
+.best{
+  position:absolute;
+  top:10px;
+  left:10px;
+  background:#f59e0b;
+  color:white;
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:12px;
+}
+
+.wishlist{
+  position:absolute;
+  top:10px;
+  right:10px;
+  background:white;
+  border-radius:50%;
+  padding:6px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.wishlist:hover{
+  transform:scale(1.2);
+}
+
+.card-body{
+  padding:18px;
+}
+
+.price{
+  font-weight:700;
+  margin:8px 0 12px;
+  font-size:16px;
+}
+
+.rating{
+  color:#f59e0b;
+  font-size:14px;
+}
+
+/* BUTTONS */
+.buttons{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+
+button{
+  padding:10px 12px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.add-btn{
+  flex:1;
+  background:linear-gradient(90deg,#2563eb,#3b82f6);
+  color:white;
+  transition:0.3s;
+}
+
+.add-btn:hover{
+  transform:scale(1.05);
+  box-shadow:0 10px 20px rgba(59,130,246,0.5);
+}
+
+.buy-btn{
+  flex:1;
+  background:linear-gradient(90deg,#a435f0,#c084fc);
+  color:white;
+  transition:0.3s;
+}
+
+.buy-btn:hover{
+  transform:scale(1.05);
+  box-shadow:0 10px 20px rgba(168,85,247,0.5);
+}
+
+.purchased{
+  background:#9ca3af !important;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <h3>Marketplace</h3>
+
+  <div class="header-controls">
+    <input type="text" id="searchInput" placeholder="Search courses...">
+    
+    <select id="categoryFilter">
+      <option value="">All</option>
+      <option value="Web">Web</option>
+      <option value="App">App</option>
+      <option value="Design">Design</option>
+    </select>
+
+    <div class="cart-icon" onclick="window.location='cart.html'">
+      🛒 Cart
+      <span id="cartCount" class="cart-count">0</span>
+    </div>
+  </div>
+</div>
+
+<div id="content"></div>
+
+<script type="module">
+
+import { initializeApp } from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
+import { getFirestore, collection, getDocs }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
+  authDomain: "login-65d4b.firebaseapp.com",
+  projectId: "login-65d4b",
+  storageBucket: "login-65d4b.appspot.com",
+  messagingSenderId: "239979806578",
+  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* STORAGE */
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let purchased = JSON.parse(localStorage.getItem("purchased")) || [];
+let wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+
+updateCartCount();
+
+function updateCartCount(){
+  document.getElementById("cartCount").innerText = cart.length;
+}
+
+function addToCart(id,title,price){
+  if(!cart.find(item=>item.id===id)){
+      cart.push({id,title,price});
+      localStorage.setItem("cart",JSON.stringify(cart));
+      updateCartCount();
+      alert("Added to cart ✅");
+  } else {
+      alert("Already in cart");
+  }
+}
+
+function addToWishlist(id){
+  if(!wishlist.includes(id)){
+    wishlist.push(id);
+    localStorage.setItem("wishlist",JSON.stringify(wishlist));
+    alert("Added to wishlist ❤️");
+  }
+}
+
+loadCourses();
+
+async function loadCourses(){
+
+  const snapshot = await getDocs(collection(db,"courses"));
+
+  let html="<div class='grid'>";
+
+  snapshot.forEach(docSnap=>{
+
+    const c=docSnap.data();
+    if(c.isPublished === false) return;
+
+    const thumbnail = c.thumbnailUrl
+      ? c.thumbnailUrl
+      : (c.videoUrl
+          ? c.videoUrl.replace("/video/upload/","/video/upload/so_1/")
+          : "https://via.placeholder.com/300x170");
+
+    const category = c.category || "";
+
+    html+=`
+      <div class="card" data-title="${c.title.toLowerCase()}" data-category="${category}">
+        
+        ${c.bestSeller ? `<div class="best">Best Seller</div>` : ""}
+
+        <div class="wishlist" onclick="addToWishlist('${docSnap.id}')">❤️</div>
+
+        <img src="${thumbnail}">
+
+        <div class="card-body">
+          <h4>${c.title}</h4>
+
+          <div class="rating">★★★★☆</div>
+
+          <div class="price">₹ ${c.price}</div>
+
+          <div class="buttons">
+            ${
+              purchased.includes(docSnap.id)
+              ? `<button class="purchased" disabled>Purchased</button>`
+              : `
+                <button class="add-btn"
+                  onclick="addToCart('${docSnap.id}','${c.title}','${c.price}')">
+                  Add
+                </button>
+
+                <button class="buy-btn"
+                  onclick="
+                    addToCart('${docSnap.id}','${c.title}','${c.price}');
+                    window.location='cart.html';
+                  ">
+                  Buy
+                </button>
+              `
+            }
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  html+="</div>";
+  document.getElementById("content").innerHTML=html;
+
+  applyFilters();
+}
+
+/* SEARCH + FILTER */
+function applyFilters(){
+
+  const searchInput = document.getElementById("searchInput");
+  const categoryFilter = document.getElementById("categoryFilter");
+
+  function filter(){
+    const keyword = searchInput.value.toLowerCase();
+    const cat = categoryFilter.value;
+
+    document.querySelectorAll(".card").forEach(card=>{
+      const title = card.dataset.title;
+      const category = card.dataset.category;
+
+      const matchTitle = title.includes(keyword);
+      const matchCategory = !cat || category === cat;
+
+      card.style.display = (matchTitle && matchCategory) ? "block" : "none";
+    });
+  }
+
+  searchInput.addEventListener("input", filter);
+  categoryFilter.addEventListener("change", filter);
+}
+
+window.addToCart=addToCart;
+window.addToWishlist=addToWishlist;
+
+</script>
+
+</body>
+</html>

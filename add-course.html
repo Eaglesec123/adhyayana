@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Upload Course</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+body{
+  font-family:'Inter',sans-serif;
+  background:#0f172a;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.card{
+  width:500px;
+  background:#1e293b;
+  padding:35px;
+  border-radius:16px;
+  box-shadow:0 15px 35px rgba(0,0,0,0.4);
+  animation:fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(20px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+h2{
+  margin-bottom:25px;
+  text-align:center;
+}
+
+input, textarea{
+  width:100%;
+  padding:12px 15px;
+  margin-bottom:15px;
+  border-radius:8px;
+  border:none;
+  outline:none;
+  font-size:14px;
+}
+
+input:focus, textarea:focus{
+  box-shadow:0 0 0 2px #3b82f6;
+}
+
+.preview{
+  width:100%;
+  height:180px;
+  object-fit:cover;
+  border-radius:10px;
+  margin-bottom:15px;
+  display:none;
+  border:2px dashed #334155;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:8px;
+  background:linear-gradient(90deg,#3b82f6,#6366f1);
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  opacity:0.9;
+}
+
+/* 🔥 Progress Bar */
+.progress-container{
+  margin-top:20px;
+  width:100%;
+  background:#334155;
+  border-radius:10px;
+  overflow:hidden;
+  display:none;
+}
+
+.progress-bar{
+  height:12px;
+  width:0%;
+  background:linear-gradient(90deg,#22d3ee,#3b82f6);
+  transition:width 0.3s ease;
+}
+
+.progress-text{
+  margin-top:10px;
+  text-align:center;
+  font-weight:600;
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+<h2>Upload Course</h2>
+
+<input type="text" id="title" placeholder="Course Title">
+<input type="number" id="price" placeholder="Price">
+<textarea id="description" placeholder="Description"></textarea>
+
+<input type="file" id="thumbnailFile" accept="image/*">
+<img id="thumbnailPreview" class="preview">
+
+<input type="file" id="videoFile" accept="video/*">
+
+<button id="uploadBtn">Upload Course</button>
+
+<div class="progress-container" id="progressContainer">
+  <div class="progress-bar" id="progressBar"></div>
+</div>
+
+<div class="progress-text" id="progressText">0%</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
+import { getAuth, onAuthStateChanged } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import { getFirestore, collection, addDoc, serverTimestamp }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
+  authDomain: "login-65d4b.firebaseapp.com",
+  projectId: "login-65d4b",
+  storageBucket: "login-65d4b.appspot.com",
+  messagingSenderId: "239979806578",
+  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* LOGIN CHECK */
+onAuthStateChanged(auth, (user)=>{
+  if(!user){
+    window.location="login.html";
+  }
+});
+
+/* Thumbnail Preview */
+thumbnailFile.addEventListener("change",function(){
+  const file=this.files[0];
+  if(file){
+    const reader=new FileReader();
+    reader.onload=e=>{
+      thumbnailPreview.src=e.target.result;
+      thumbnailPreview.style.display="block";
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+uploadBtn.addEventListener("click",async ()=>{
+
+  const video=videoFile.files[0];
+  const thumbnail=thumbnailFile.files[0];
+
+  if(!video || !thumbnail){
+    alert("Select thumbnail and video");
+    return;
+  }
+
+  progressContainer.style.display="block";
+  progressText.style.display="block";
+  progressText.innerText="Uploading...";
+
+  const thumbnailUrl=await uploadImage(thumbnail);
+  const videoUrl=await uploadVideo(video);
+
+  await addDoc(collection(db,"courses"),{
+    title:title.value,
+    price:Number(price.value),
+    description:description.value,
+    thumbnailUrl:thumbnailUrl,
+    videoUrl:videoUrl,
+    creatorId:auth.currentUser.uid,
+    isPublished:true,
+    createdAt:serverTimestamp()
+  });
+
+  progressBar.style.width="100%";
+  progressText.innerText="100% Upload Complete 🎉";
+
+  setTimeout(()=>{
+    window.location="dashboard.html";
+  },1000);
+
+});
+
+/* Upload Thumbnail */
+function uploadImage(file){
+  return new Promise((resolve,reject)=>{
+    const formData=new FormData();
+    formData.append("file",file);
+    formData.append("upload_preset","darshan");
+
+    fetch("https://api.cloudinary.com/v1_1/dlqbfsh92/image/upload",{
+      method:"POST",
+      body:formData
+    })
+    .then(res=>res.json())
+    .then(data=>resolve(data.secure_url))
+    .catch(err=>reject(err));
+  });
+}
+
+/* Upload Video with Progress */
+function uploadVideo(file){
+  return new Promise((resolve,reject)=>{
+    const formData=new FormData();
+    formData.append("file",file);
+    formData.append("upload_preset","darshan");
+
+    const xhr=new XMLHttpRequest();
+
+    xhr.open(
+      "POST",
+      "https://api.cloudinary.com/v1_1/dlqbfsh92/video/upload",
+      true
+    );
+
+    xhr.upload.onprogress=function(e){
+      if(e.lengthComputable){
+        const percent=Math.round((e.loaded/e.total)*100);
+        progressBar.style.width=percent+"%";
+        progressText.innerText=percent+"% Uploading...";
+      }
+    };
+
+    xhr.onload=()=>{
+      if(xhr.status===200){
+        const response=JSON.parse(xhr.responseText);
+        resolve(response.secure_url);
+      }else{
+        reject(xhr.responseText);
+      }
+    };
+
+    xhr.onerror=()=>reject("Upload error");
+
+    xhr.send(formData);
+  });
+}
+
+</script>
+</body>
+</html>
