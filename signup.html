@@ -13,19 +13,28 @@
 
 <div class="auth-wrapper">
 
-  <!-- LOGO -->
   <div class="auth-logo">
     <img src="logo.png" alt="Adhyayana Logo">
     <h2>ADHYAYANA</h2>
   </div>
 
-  <!-- CARD -->
   <div class="auth-card auth-animate login-card">
 
     <h3>Create Account 🚀</h3>
     <p class="auth-sub">Join and start learning & earning</p>
 
-    <form class="signup-form">
+    <form id="signupForm">
+
+      <!-- ROLE SELECTION -->
+      <div style="display:flex; gap:15px; margin-bottom:15px;">
+        <label>
+          <input type="radio" name="role" value="student" checked> Student
+        </label>
+
+        <label>
+          <input type="radio" name="role" value="teacher"> Teacher
+        </label>
+      </div>
 
       <!-- NAME -->
       <input type="text" id="signupName" placeholder="Full Name" required>
@@ -39,7 +48,7 @@
         <span class="toggle-password" id="toggleSignupPassword">👁</span>
       </div>
 
-      <button class="btn primary full">
+      <button class="btn primary full" type="submit">
         Create Account
       </button>
 
@@ -61,10 +70,103 @@
       <a href="index.html" class="back-home">← Back to Home</a>
     </div>
 
+    <p id="error" style="color:red; margin-top:10px;"></p>
+
   </div>
 </div>
 
-<script type="module" src="js/signup-auth.js"></script>
+<script type="module">
+
+import { initializeApp } from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup
+}
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
+  authDomain: "login-65d4b.firebaseapp.com",
+  projectId: "login-65d4b",
+  storageBucket: "login-65d4b.appspot.com",
+  messagingSenderId: "239979806578",
+  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const error = document.getElementById("error");
+
+/* EMAIL SIGNUP */
+signupForm.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  error.innerText="";
+
+  const role = document.querySelector('input[name="role"]:checked').value;
+
+  try{
+    const userCred = await createUserWithEmailAndPassword(
+      auth,
+      signupEmail.value,
+      signupPassword.value
+    );
+
+    const user = userCred.user;
+
+    /* SAVE ROLE SECURELY */
+    await setDoc(doc(db,"users",user.uid),{
+      name: signupName.value,
+      email: signupEmail.value,
+      role: role,
+      createdAt: new Date()
+    });
+
+    window.location.replace("dashboard.html");
+
+  }catch(err){
+    error.innerText = err.message;
+  }
+});
+
+/* GOOGLE SIGNUP */
+const provider = new GoogleAuthProvider();
+
+googleSignup.addEventListener("click", async ()=>{
+  try{
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    const role = document.querySelector('input[name="role"]:checked').value;
+
+    await setDoc(doc(db,"users",user.uid),{
+      name: user.displayName,
+      email: user.email,
+      role: role,
+      createdAt: new Date()
+    });
+
+    window.location.replace("dashboard.html");
+
+  }catch(err){
+    error.innerText = err.message;
+  }
+});
+
+</script>
+
 <script src="js/password-toggle.js"></script>
 
 </body>
