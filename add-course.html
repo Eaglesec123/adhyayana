@@ -32,10 +32,7 @@ body{
   box-shadow:0 20px 40px rgba(0,0,0,0.2);
 }
 
-h2{
-  text-align:center;
-  margin-bottom:25px;
-}
+h2{text-align:center;margin-bottom:25px;}
 
 input,textarea{
   width:100%;
@@ -46,10 +43,7 @@ input,textarea{
   font-size:14px;
 }
 
-textarea{
-  resize:none;
-  height:100px;
-}
+textarea{resize:none;height:100px;}
 
 button{
   width:100%;
@@ -63,9 +57,7 @@ button{
   transition:0.3s;
 }
 
-button:hover{
-  background:#5563d1;
-}
+button:hover{background:#5563d1;}
 
 .progress-container{
   margin-top:15px;
@@ -80,7 +72,7 @@ button:hover{
   height:100%;
   width:0%;
   background:#667eea;
-  transition:width 0.3s ease;
+  transition:width 0.2s ease;
 }
 
 .progress-text{
@@ -96,9 +88,7 @@ button:hover{
 }
 
 @media(max-width:480px){
-  .container{
-    width:100%;
-  }
+  .container{width:100%;}
 }
 </style>
 </head>
@@ -135,7 +125,9 @@ import { initializeApp } from
 
 import { 
   getAuth, 
-  onAuthStateChanged
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -154,7 +146,7 @@ import {
 ========================= */
 
 const firebaseConfig = {
-  apiKey: "YOUR_FIREBASE_KEY",
+  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
   authDomain: "login-65d4b.firebaseapp.com",
   projectId: "login-65d4b",
   storageBucket: "login-65d4b.appspot.com",
@@ -165,6 +157,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+/* 🔥 Force persistent login across pages */
+await setPersistence(auth, browserLocalPersistence);
 
 /* =========================
    TEACHER ROLE CHECK
@@ -177,11 +172,16 @@ onAuthStateChanged(auth, async (user)=>{
     return;
   }
 
-  const snap = await getDoc(doc(db,"users",user.uid));
+  try{
 
-  if(!snap.exists() || snap.data().role !== "teacher"){
-    alert("Access denied! Only teachers allowed.");
-    window.location="dashboard.html";
+    const snap = await getDoc(doc(db,"users",user.uid));
+
+    if(!snap.exists() || snap.data().role !== "teacher"){
+      window.location="dashboard.html";
+    }
+
+  }catch(err){
+    window.location="login.html";
   }
 
 });
@@ -233,7 +233,7 @@ function uploadToCloudinary(file, resourceType){
 }
 
 /* =========================
-   MAIN COURSE UPLOAD
+   MAIN UPLOAD
 ========================= */
 
 window.addCourse = async function(){
