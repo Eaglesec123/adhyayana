@@ -8,24 +8,28 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+
 body{
   background:linear-gradient(135deg,#0f172a,#1e293b);
   color:white;
   display:flex;
   min-height:100vh;
 }
+
 .sidebar{
   width:250px;
   background:#111827;
   padding:30px 20px;
   box-shadow:5px 0 30px rgba(0,0,0,.6);
 }
+
 .logo{
   font-size:20px;
   font-weight:600;
   margin-bottom:40px;
   text-align:center;
 }
+
 .nav-link{
   display:block;
   padding:12px;
@@ -35,11 +39,13 @@ body{
   border-radius:12px;
   transition:.3s;
 }
+
 .nav-link:hover{
   background:#2563eb;
   color:white;
   transform:translateX(6px);
 }
+
 .upload-btn{
   margin-top:20px;
   padding:12px;
@@ -52,21 +58,25 @@ body{
   font-weight:600;
   transition:.3s;
 }
+
 .upload-btn:hover{
   transform:translateY(-4px);
   box-shadow:0 15px 30px rgba(34,197,94,.4);
 }
+
 .main{
   flex:1;
   padding:40px;
   overflow:auto;
 }
+
 .stats{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
   gap:25px;
   margin-bottom:40px;
 }
+
 .stat-card{
   background:rgba(30,41,59,.9);
   padding:25px;
@@ -75,14 +85,62 @@ body{
   box-shadow:0 30px 60px rgba(0,0,0,.6);
   transition:.4s;
 }
+
 .stat-card:hover{
   transform:translateY(-6px) scale(1.05);
 }
+
 .stat-number{
   font-size:28px;
   font-weight:700;
   margin-bottom:10px;
 }
+
+/* ===== Animated Toggle Switch ===== */
+
+.switch{
+  position:relative;
+  display:inline-block;
+  width:50px;
+  height:26px;
+  margin-top:10px;
+}
+.switch input{
+  opacity:0;
+  width:0;
+  height:0;
+}
+.slider{
+  position:absolute;
+  cursor:pointer;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background-color:#64748b;
+  transition:.4s;
+  border-radius:34px;
+}
+.slider:before{
+  position:absolute;
+  content:"";
+  height:20px;
+  width:20px;
+  left:3px;
+  bottom:3px;
+  background:white;
+  transition:.4s;
+  border-radius:50%;
+}
+input:checked + .slider{
+  background-color:#22c55e;
+}
+input:checked + .slider:before{
+  transform:translateX(24px);
+}
+
+/* COURSE */
+
 .course-grid{
   display:none;
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
@@ -97,6 +155,7 @@ body{
 .course-card:hover{
   transform:translateY(-6px);
 }
+
 .delete-btn{
   margin-top:10px;
   padding:8px;
@@ -184,14 +243,12 @@ Withdraw Now
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, query, where, getDocs, deleteDoc, addDoc, updateDoc }
+import { getFirestore, doc, collection, query, where, getDocs, deleteDoc, addDoc, updateDoc }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = { YOUR_FIREBASE_CONFIG };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -199,12 +256,13 @@ const db = getFirestore(app);
 let currentBalance=0;
 
 onAuthStateChanged(auth, async(user)=>{
-if(!user){ window.location="login.html"; return; }
+if(!user){window.location="login.html";return;}
 loadCourses(user.uid);
 loadRevenue(user.uid);
 loadWithdrawHistory(user.uid);
 });
 
+/* LOAD COURSES WITH ANIMATED TOGGLE */
 async function loadCourses(uid){
 const q=query(collection(db,"courses"),where("creatorId","==",uid));
 const snapshot=await getDocs(q);
@@ -222,11 +280,14 @@ container.innerHTML+=`
 <h3>${course.title}</h3>
 <p>₹ ${course.price}</p>
 
-<button onclick="toggleCourseStatus('${docSnap.id}','${status}')" 
-style="margin-top:8px;padding:8px;width:100%;border:none;border-radius:8px;
-background:${status==="active"?"#22c55e":"#64748b"};color:white;">
+<label class="switch">
+<input type="checkbox" ${status==="active"?"checked":""}
+onchange="toggleCourseStatus('${docSnap.id}',this.checked)">
+<span class="slider"></span>
+</label>
+<p style="font-size:12px;margin-top:6px;">
 ${status==="active"?"Active":"Inactive"}
-</button>
+</p>
 
 <button class="delete-btn" onclick="deleteCourse('${docSnap.id}')">Delete</button>
 </div>
@@ -236,15 +297,15 @@ ${status==="active"?"Active":"Inactive"}
 document.getElementById("totalCourses").innerText=totalCourses;
 }
 
-window.toggleCourseStatus=async function(id,currentStatus){
-const newStatus=currentStatus==="active"?"inactive":"active";
-await updateDoc(doc(db,"courses",id),{status:newStatus});
+window.toggleCourseStatus=async function(id,isChecked){
+await updateDoc(doc(db,"courses",id),{status:isChecked?"active":"inactive"});
 loadCourses(auth.currentUser.uid);
-}
+};
 
 async function loadRevenue(uid){
 const purchaseSnap=await getDocs(query(collection(db,"purchases"),where("teacherId","==",uid)));
 let totalRevenue=0,teacherRevenue=0,companyRevenue=0;
+
 purchaseSnap.forEach(d=>{
 const data=d.data();
 totalRevenue+=data.amount;
@@ -258,7 +319,7 @@ where("status","in",["pending","processing"])
 ));
 
 let pendingAmount=0;
-withdrawSnap.forEach(d=>{ pendingAmount+=d.data().amount; });
+withdrawSnap.forEach(d=>{pendingAmount+=d.data().amount;});
 
 currentBalance=teacherRevenue-pendingAmount;
 
@@ -288,10 +349,8 @@ document.getElementById("withdrawBtn").addEventListener("click",async()=>{
 const user=auth.currentUser;
 const amount=Number(document.getElementById("withdrawAmount").value);
 const type=document.querySelector('input[name="withdrawType"]:checked').value;
-
 if(amount<100){alert("Minimum ₹100 required");return;}
 if(amount>currentBalance){alert("Insufficient balance");return;}
-
 await addDoc(collection(db,"withdrawRequests"),{
 teacherId:user.uid,
 amount:amount,
@@ -299,28 +358,27 @@ type:type,
 status:type==="automatic"?"processing":"pending",
 createdAt:new Date()
 });
-
 document.getElementById("withdrawAmount").value="";
 loadRevenue(user.uid);
 loadWithdrawHistory(user.uid);
 document.getElementById("withdrawStatus").innerHTML="<p style='color:#22c55e;'>Request Sent ✅</p>";
 });
 
-window.toggleWithdrawHistory=function(){
+window.toggleWithdrawHistory=()=>{
 const el=document.getElementById("withdrawHistory");
 el.style.display=el.style.display==="none"?"block":"none";
-}
-window.toggleCourses=function(){
+};
+window.toggleCourses=()=>{
 const el=document.getElementById("courseContainer");
 el.style.display=el.style.display==="none"?"grid":"none";
-}
+};
 
 window.deleteCourse=async function(id){
 if(!confirm("Delete this course?")) return;
 await deleteDoc(doc(db,"courses",id));
 loadCourses(auth.currentUser.uid);
-}
-
+};
 </script>
+
 </body>
 </html>
