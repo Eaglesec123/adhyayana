@@ -7,9 +7,82 @@
 
 <link rel="stylesheet" href="css/style.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+
+/* Same 3D background and animation as login */
+.auth-body {
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-body::before {
+  content: "";
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle at center, #6366f1, transparent 70%);
+  top: -150px;
+  left: -150px;
+  filter: blur(120px);
+  animation: floatGlow 8s ease-in-out infinite alternate;
+  z-index: 0;
+}
+
+.auth-body::after {
+  content: "";
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle at center, #a855f7, transparent 70%);
+  bottom: -150px;
+  right: -150px;
+  filter: blur(120px);
+  animation: floatGlow 10s ease-in-out infinite alternate-reverse;
+  z-index: 0;
+}
+
+@keyframes floatGlow {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(40px) rotate(10deg); }
+}
+
+.auth-card {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.6s ease;
+  transform-style: preserve-3d;
+}
+
+.auth-card:hover {
+  transform: rotateY(6deg) rotateX(6deg);
+}
+
+.floating-3d {
+  position: absolute;
+  top: 25%;
+  right: 15%;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(45deg,#ec4899,#8b5cf6);
+  border-radius: 20px;
+  opacity: 0.4;
+  animation: floatBox 6s ease-in-out infinite;
+  filter: blur(2px);
+}
+
+@keyframes floatBox {
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-40px) rotate(20deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+</style>
 </head>
 
 <body class="auth-body">
+
+<div class="floating-3d"></div>
 
 <div class="auth-wrapper">
 
@@ -29,9 +102,9 @@
 <label><input type="radio" name="role" value="teacher"> Teacher</label>
 </div>
 
-<input type="text" id="signupName" placeholder="Full Name" required>
-<input type="email" id="signupEmail" placeholder="Email Address" required>
-<input type="password" id="signupPassword" placeholder="Password" required>
+<input type="text" placeholder="Full Name" required>
+<input type="email" placeholder="Email Address" required>
+<input type="password" placeholder="Password" required>
 
 <button class="btn primary full" type="submit">
 Create Account
@@ -41,7 +114,7 @@ Create Account
 
 <div class="divider">OR</div>
 
-<button id="googleSignup" class="google-btn" type="button"
+<button class="google-btn" type="button"
 style="display:flex;align-items:center;justify-content:center;gap:8px;">
 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
 <span>Continue with Google</span>
@@ -52,116 +125,8 @@ Already have account?
 <a href="login.html">Login</a>
 </p>
 
-<p style="margin-top:10px;">
-<a href="index.html">← Back to Home</a>
-</p>
-
-<p id="error" style="color:red;"></p>
-
 </div>
 </div>
 
-<script type="module">
-
-import { initializeApp } from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-
-import {
-getAuth,
-createUserWithEmailAndPassword,
-GoogleAuthProvider,
-signInWithPopup
-} from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-import {
-getFirestore,
-doc,
-setDoc,
-getDoc
-} from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
-apiKey:"AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
-authDomain:"login-65d4b.firebaseapp.com",
-projectId:"login-65d4b",
-storageBucket:"login-65d4b.appspot.com",
-messagingSenderId:"239979806578",
-appId:"1:239979806578:web:65db25b7e975ef0f1867eb"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const error = document.getElementById("error");
-
-signupForm.addEventListener("submit", async (e)=>{
-e.preventDefault();
-error.innerText="";
-
-const role =
-document.querySelector('input[name="role"]:checked').value;
-
-try{
-
-const userCred = await createUserWithEmailAndPassword(
-auth,
-signupEmail.value.trim(),
-signupPassword.value
-);
-
-await setDoc(doc(db,"users",userCred.user.uid),{
-name:signupName.value,
-email:signupEmail.value,
-role:role,
-approved: role==="teacher" ? false : true,
-failedAttempts:0,
-locked:false,
-createdAt:new Date()
-});
-
-window.location.replace("dashboard.html");
-
-}catch(err){
-error.innerText=err.message;
-}
-
-});
-
-const provider = new GoogleAuthProvider();
-
-googleSignup.addEventListener("click", async ()=>{
-error.innerText="";
-const role =
-document.querySelector('input[name="role"]:checked').value;
-
-try{
-
-const result = await signInWithPopup(auth,provider);
-const user = result.user;
-const userRef = doc(db,"users",user.uid);
-const snap = await getDoc(userRef);
-
-if(!snap.exists()){
-await setDoc(userRef,{
-name:user.displayName || "User",
-email:user.email,
-role:role,
-approved: role==="teacher" ? false : true,
-failedAttempts:0,
-locked:false,
-createdAt:new Date()
-});
-}
-
-window.location.replace("dashboard.html");
-
-}catch(err){
-error.innerText=err.message;
-}
-});
-
-</script>
 </body>
 </html>
