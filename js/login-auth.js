@@ -29,10 +29,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const form = document.querySelector("#loginForm");
+const form = document.getElementById("loginForm");
 const googleBtn = document.getElementById("googleLogin");
 
-/* EMAIL LOGIN */
 form.addEventListener("submit", async (e)=>{
   e.preventDefault();
 
@@ -51,7 +50,7 @@ form.addEventListener("submit", async (e)=>{
     }
 
     if(snap.data().role !== selectedRole){
-      alert("Role mismatch. You cannot login with this role.");
+      alert("Role mismatch. You registered as "+snap.data().role);
       return;
     }
 
@@ -62,25 +61,12 @@ form.addEventListener("submit", async (e)=>{
   }
 });
 
-/* GOOGLE LOGIN */
 googleBtn.addEventListener("click", async ()=>{
-
   try {
-
     const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-
-    const snap = await getDoc(doc(db,"users",result.user.uid));
-
-    if(!snap.exists()){
-      alert("User role not found.");
-      return;
-    }
-
+    const result = await signInWithPopup(auth,provider);
     window.location.replace("dashboard.html");
-
   } catch(err){
     alert(err.message);
   }
-
 });
