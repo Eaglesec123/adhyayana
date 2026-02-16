@@ -15,149 +15,56 @@
   --text:#ffffff;
   --accent:#22c55e;
   --accent2:#6366f1;
-  --glass:rgba(255,255,255,.05);
 }
-
 body.light{
   --bg:#f1f5f9;
   --card:#ffffff;
   --text:#0f172a;
-  --glass:rgba(0,0,0,.03);
 }
-
 body{
   margin:0;
   font-family:Poppins;
   background:linear-gradient(135deg,var(--bg),#0b1220);
   color:var(--text);
   display:flex;
-  transition:.4s ease;
 }
 
 /* SIDEBAR */
 .sidebar{
   width:260px;
-  background:linear-gradient(180deg,var(--card),#0f172a);
+  background:var(--card);
   height:100vh;
-  padding:25px 20px;
+  padding:20px;
   position:fixed;
-  backdrop-filter:blur(12px);
-  border-right:1px solid rgba(255,255,255,.05);
-  transition:.4s ease;
+  transition:.3s;
 }
-
-.sidebar.collapsed{width:85px;}
-
 .sidebar a{
   display:flex;
   gap:12px;
-  padding:14px;
-  margin:12px 0;
+  padding:12px;
+  margin:10px 0;
   text-decoration:none;
   color:var(--text);
-  border-radius:12px;
-  transition:.3s ease;
-  font-weight:500;
+  border-radius:10px;
+  transition:.3s;
 }
-
 .sidebar a:hover{
-  background:linear-gradient(90deg,var(--accent2),var(--accent));
-  transform:translateX(6px);
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
 }
-
-.sidebar.collapsed .text{display:none}
 
 /* MAIN */
 .main{
   flex:1;
   margin-left:260px;
   padding:40px;
-  transition:.4s ease;
 }
-.sidebar.collapsed ~ .main{margin-left:85px}
 
 /* TOPBAR */
 .topbar{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:40px;
-}
-
-.topbar h2{
-  font-weight:600;
-  font-size:26px;
-  background:linear-gradient(90deg,var(--accent),var(--accent2));
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
-
-.top-right{
-  display:flex;
-  gap:20px;
-  align-items:center;
-}
-
-/* SELECT */
-select{
-  padding:8px 14px;
-  border-radius:8px;
-  border:none;
-  background:var(--card);
-  color:var(--text);
-  box-shadow:0 5px 15px rgba(0,0,0,.15);
-}
-
-/* Theme Toggle */
-#themeToggle{
-  cursor:pointer;
-}
-
-/* Notification */
-.notification{
-  position:relative;
-  cursor:pointer;
-  font-size:20px;
-  transition:.3s ease;
-}
-.notification:hover{
-  transform:scale(1.2) rotate(8deg);
-}
-.badge{
-  position:absolute;
-  top:-6px;
-  right:-10px;
-  background:linear-gradient(45deg,#ef4444,#f87171);
-  font-size:11px;
-  padding:4px 7px;
-  border-radius:50%;
-  font-weight:600;
-}
-
-/* Profile */
-.profile{
-  position:relative;
-  cursor:pointer;
-  font-size:20px;
-}
-.dropdown{
-  position:absolute;
-  top:40px;
-  right:0;
-  background:var(--card);
-  padding:14px;
-  border-radius:12px;
-  display:none;
-  box-shadow:0 15px 30px rgba(0,0,0,.3);
-}
-.profile.open .dropdown{display:block}
-.dropdown p{
-  margin:8px 0;
-  cursor:pointer;
-  transition:.2s;
-}
-.dropdown p:hover{
-  color:var(--accent);
+  margin-bottom:30px;
 }
 
 /* STATS */
@@ -166,87 +73,94 @@ select{
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:25px;
 }
-
 .stat-card{
-  background:var(--glass);
-  backdrop-filter:blur(14px);
+  background:rgba(255,255,255,.05);
+  backdrop-filter:blur(15px);
   padding:30px;
   border-radius:22px;
-  box-shadow:0 20px 45px rgba(0,0,0,.25);
-  transition:.4s ease;
-  border:1px solid rgba(255,255,255,.05);
+  box-shadow:0 20px 40px rgba(0,0,0,.3);
+  transition:.3s;
 }
-
 .stat-card:hover{
-  transform:translateY(-10px) scale(1.03);
-  box-shadow:0 25px 50px rgba(0,0,0,.4);
+  transform:translateY(-8px);
 }
-
 .stat-number{
   font-size:32px;
   font-weight:700;
-  margin-bottom:6px;
-  background:linear-gradient(90deg,var(--accent),var(--accent2));
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
+  margin-bottom:5px;
 }
 
-/* CHART CARD */
+/* CHART */
 .chart-card{
   margin-top:40px;
-  background:var(--glass);
-  backdrop-filter:blur(14px);
+  background:rgba(255,255,255,.05);
   padding:30px;
   border-radius:22px;
-  box-shadow:0 20px 45px rgba(0,0,0,.25);
-  border:1px solid rgba(255,255,255,.05);
-  transition:.4s ease;
+  backdrop-filter:blur(15px);
 }
-.chart-card:hover{
-  transform:translateY(-6px);
+
+/* COURSE SECTION */
+.premium-card{
+  background:rgba(255,255,255,.05);
+  padding:30px;
+  border-radius:22px;
+  backdrop-filter:blur(15px);
+  box-shadow:0 20px 40px rgba(0,0,0,.3);
+}
+.course-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:25px;
+}
+.course-item{
+  background:rgba(255,255,255,.06);
+  padding:15px;
+  border-radius:18px;
+  transition:.3s;
+}
+.course-item:hover{
+  transform:scale(1.05);
+}
+.course-item img{
+  width:100%;
+  height:140px;
+  object-fit:cover;
+  border-radius:14px;
+}
+.upload-form{
+  display:grid;
+  gap:15px;
+}
+.upload-form input{
+  padding:12px;
+  border-radius:10px;
+  border:none;
+}
+.premium-btn{
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(90deg,#22c55e,#16a34a);
+  color:white;
+  font-weight:600;
+  cursor:pointer;
 }
 </style>
-
 </head>
 
 <body>
 
-<div class="sidebar" id="sidebar">
-  <div onclick="toggleSidebar()">☰</div>
-  <a href="#"><span>🏠</span><span class="text">Dashboard</span></a>
-  <a href="#"><span>📚</span><span class="text">Courses</span></a>
-  <a href="#"><span>💰</span><span class="text">Withdraw</span></a>
+<div class="sidebar">
+  <a href="#" onclick="showSection('dashboardSection')">🏠 Dashboard</a>
+  <a href="#" onclick="showSection('coursesSection')">📚 Courses</a>
 </div>
 
 <div class="main">
 
+<div id="dashboardSection">
+
 <div class="topbar">
   <h2>Dashboard</h2>
-  <div class="top-right">
-
-    <select id="revenueFilter" onchange="filterRevenue(this.value)">
-      <option value="monthly">Monthly</option>
-      <option value="yearly">Yearly</option>
-    </select>
-
-    <label>
-      <input type="checkbox" id="themeToggle" onchange="toggleTheme()"> 🌙
-    </label>
-
-    <div class="notification">
-      🔔 <div class="badge" id="notifCount">0</div>
-    </div>
-
-    <div class="profile" onclick="toggleProfile()">
-      👤
-      <div class="dropdown">
-        <p>Profile</p>
-        <p>Settings</p>
-        <p>Logout</p>
-      </div>
-    </div>
-
-  </div>
 </div>
 
 <div class="stats">
@@ -270,10 +184,33 @@ select{
 
 </div>
 
+<!-- COURSES SECTION -->
+<div id="coursesSection" style="display:none; margin-top:20px;">
+
+  <div class="premium-card">
+    <h3>📖 Uploaded Courses</h3>
+    <div id="uploadedCourses" class="course-grid"></div>
+  </div>
+
+  <div class="premium-card" style="margin-top:30px;">
+    <h3>⬆ Upload New Course</h3>
+    <div class="upload-form">
+      <input type="text" id="courseTitle" placeholder="Course Title">
+      <input type="number" id="coursePrice" placeholder="Course Price">
+      <input type="text" id="courseImage" placeholder="Thumbnail URL">
+      <button onclick="uploadCourse()" class="premium-btn">Upload Course</button>
+    </div>
+  </div>
+
+</div>
+
+</div>
+
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, query, where, onSnapshot, doc, getDoc }
+import { getFirestore, collection, query, where, onSnapshot, addDoc }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = { YOUR_FIREBASE_CONFIG };
@@ -281,142 +218,53 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let fullRevenueData = new Array(12).fill(0);
-let revenueChart;
-
-/* Theme Save */
-if(localStorage.getItem("theme")==="light"){
-  document.body.classList.add("light");
-  document.getElementById("themeToggle").checked=true;
-}
-window.toggleTheme=function(){
-  document.body.classList.toggle("light");
-  localStorage.setItem("theme",
-    document.body.classList.contains("light")?"light":"dark"
-  );
+/* Section switch */
+window.showSection=function(id){
+  document.getElementById("dashboardSection").style.display="none";
+  document.getElementById("coursesSection").style.display="none";
+  document.getElementById(id).style.display="block";
 }
 
-/* Sidebar */
-window.toggleSidebar=function(){
-  document.getElementById("sidebar").classList.toggle("collapsed");
-}
+/* Upload Course */
+window.uploadCourse=async function(){
+  const title=document.getElementById("courseTitle").value;
+  const price=document.getElementById("coursePrice").value;
+  const image=document.getElementById("courseImage").value;
+  if(!title||!price) return alert("Fill all fields");
 
-/* Profile */
-window.toggleProfile=function(){
-  document.querySelector(".profile").classList.toggle("open");
-}
-
-/* Counter Animation */
-function animateCounter(id,target){
-  let start=0;
-  const duration=800;
-  const startTime=performance.now();
-  function update(now){
-    const progress=Math.min((now-startTime)/duration,1);
-    const value=Math.floor(progress*target);
-    document.getElementById(id).innerText="₹"+value;
-    if(progress<1) requestAnimationFrame(update);
-  }
-  requestAnimationFrame(update);
-}
-
-/* Prediction */
-function predictRevenue(data){
-  const n=data.length;
-  let sumX=0,sumY=0,sumXY=0,sumXX=0;
-  for(let i=0;i<n;i++){
-    sumX+=i;
-    sumY+=data[i];
-    sumXY+=i*data[i];
-    sumXX+=i*i;
-  }
-  const slope=(n*sumXY-sumX*sumY)/(n*sumXX-sumX*sumX);
-  const intercept=(sumY-slope*sumX)/n;
-  let prediction=[];
-  for(let i=0;i<n+3;i++){
-    prediction.push(intercept+slope*i);
-  }
-  return prediction;
-}
-
-/* Chart Init */
-function initChart(){
-  const ctx=document.getElementById("revenueChart").getContext("2d");
-  revenueChart=new Chart(ctx,{
-    type:"line",
-    data:{labels:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
-    datasets:[]},
-    options:{responsive:true}
+  await addDoc(collection(db,"courses"),{
+    title,
+    price:Number(price),
+    thumbnail:image,
+    creatorId:auth.currentUser.uid,
+    createdAt:new Date()
   });
+
+  alert("Course Uploaded ✅");
 }
 
-/* Update Chart */
-function updateChart(data){
-  const prediction=predictRevenue(data);
-  revenueChart.data.datasets=[
-    {
-      label:"Revenue",
-      data:data,
-      borderColor:"#22c55e",
-      fill:true,
-      tension:.4
-    },
-    {
-      label:"AI Prediction",
-      data:prediction,
-      borderColor:"#f59e0b",
-      borderDash:[5,5],
-      fill:false
-    }
-  ];
-  revenueChart.update();
-}
-
-/* Filter */
-window.filterRevenue=function(type){
-  if(type==="yearly"){
-    const total=fullRevenueData.reduce((a,b)=>a+b,0);
-    updateChart([total]);
-  }else{
-    updateChart(fullRevenueData);
-  }
-}
-
-/* Firebase Live */
-onAuthStateChanged(auth, async(user)=>{
+/* Load Uploaded Courses */
+onAuthStateChanged(auth,(user)=>{
   if(!user) return;
 
-  const roleSnap=await getDoc(doc(db,"users",user.uid));
-  if(roleSnap.exists() && roleSnap.data().role==="admin"){
-    console.log("Admin Mode");
-  }
-
-  const q=query(collection(db,"purchases"),where("teacherId","==",user.uid));
-
-  onSnapshot(q,(snapshot)=>{
-    let total=0;
-    fullRevenueData=new Array(12).fill(0);
-
-    snapshot.forEach(doc=>{
-      const data=doc.data();
-      total+=data.amount;
-      const month=new Date(data.createdAt?.seconds*1000||Date.now()).getMonth();
-      fullRevenueData[month]+=data.amount;
+  const q=query(collection(db,"courses"),where("creatorId","==",user.uid));
+  onSnapshot(q,(snap)=>{
+    const container=document.getElementById("uploadedCourses");
+    container.innerHTML="";
+    snap.forEach(doc=>{
+      const c=doc.data();
+      container.innerHTML+=`
+        <div class="course-item">
+          <img src="${c.thumbnail||'images/default-course.png'}">
+          <h4>${c.title}</h4>
+          <p>₹${c.price}</p>
+        </div>
+      `;
     });
-
-    animateCounter("totalRevenue",total);
-    animateCounter("teacherRevenue",total*0.8);
-    animateCounter("availableBalance",total*0.7);
-
-    document.getElementById("notifCount").innerText=snapshot.size;
-
-    updateChart(fullRevenueData);
   });
 });
 
-initChart();
 </script>
 
 </body>
 </html>
-
