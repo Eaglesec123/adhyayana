@@ -12,13 +12,13 @@
 :root{
   --bg:#0f172a;
   --card:#1e293b;
-  --text:white;
+  --text:#ffffff;
   --accent:#22c55e;
 }
 
 body.light{
   --bg:#f1f5f9;
-  --card:white;
+  --card:#ffffff;
   --text:#0f172a;
 }
 
@@ -38,41 +38,71 @@ body{
   background:var(--card);
   height:100vh;
   transition:.3s;
-  padding:30px 20px;
+  padding:20px;
+  position:fixed;
+  z-index:100;
 }
 
 .sidebar.collapsed{
   width:80px;
 }
 
-.logo{
-  font-size:20px;
-  font-weight:700;
-  margin-bottom:40px;
+.sidebar.collapsed .text{
+  display:none;
 }
 
-.nav-link{
-  display:block;
+.sidebar a{
+  display:flex;
+  align-items:center;
+  gap:10px;
   padding:12px;
-  margin:10px 0;
-  border-radius:10px;
-  text-decoration:none;
   color:var(--text);
+  text-decoration:none;
+  border-radius:10px;
+  margin:10px 0;
   transition:.3s;
 }
 
-.nav-link:hover{
+.sidebar a:hover{
   background:rgba(34,197,94,.2);
+}
+
+.menu-toggle{
+  cursor:pointer;
+  margin-bottom:20px;
+}
+
+/* ===== MOBILE SIDEBAR ===== */
+
+@media(max-width:768px){
+  .sidebar{
+    transform:translateX(-100%);
+  }
+  .sidebar.active{
+    transform:translateX(0);
+  }
 }
 
 /* ===== MAIN ===== */
 
 .main{
   flex:1;
+  margin-left:260px;
   padding:30px;
+  transition:.3s;
 }
 
-/* TOPBAR */
+.sidebar.collapsed ~ .main{
+  margin-left:80px;
+}
+
+@media(max-width:768px){
+  .main{
+    margin-left:0;
+  }
+}
+
+/* ===== TOPBAR ===== */
 
 .topbar{
   display:flex;
@@ -80,6 +110,32 @@ body{
   align-items:center;
   margin-bottom:30px;
 }
+
+.top-right{
+  display:flex;
+  align-items:center;
+  gap:20px;
+}
+
+/* Notification */
+
+.notification{
+  position:relative;
+  cursor:pointer;
+}
+
+.badge{
+  position:absolute;
+  top:-6px;
+  right:-6px;
+  background:red;
+  color:white;
+  font-size:12px;
+  padding:3px 6px;
+  border-radius:50%;
+}
+
+/* Profile */
 
 .profile{
   position:relative;
@@ -89,10 +145,10 @@ body{
 .dropdown{
   position:absolute;
   right:0;
-  top:40px;
+  top:35px;
   background:var(--card);
   padding:15px;
-  border-radius:12px;
+  border-radius:10px;
   display:none;
 }
 
@@ -100,7 +156,7 @@ body{
   display:block;
 }
 
-/* STATS */
+/* ===== STATS ===== */
 
 .stats{
   display:grid;
@@ -112,7 +168,7 @@ body{
   background:var(--card);
   padding:25px;
   border-radius:20px;
-  box-shadow:0 10px 30px rgba(0,0,0,.3);
+  box-shadow:0 10px 25px rgba(0,0,0,.2);
 }
 
 .stat-number{
@@ -120,64 +176,13 @@ body{
   font-weight:700;
 }
 
-/* CHART */
+/* ===== CHART ===== */
 
 .chart-card{
-  background:var(--card);
-  padding:30px;
-  border-radius:20px;
   margin-top:30px;
-}
-
-/* BUTTONS */
-
-.btn{
-  padding:8px 15px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  background:var(--accent);
-  color:white;
-}
-
-/* TOGGLE SWITCH */
-
-.switch{
-  position:relative;
-  display:inline-block;
-  width:45px;
-  height:22px;
-}
-
-.switch input{display:none;}
-
-.slider{
-  position:absolute;
-  cursor:pointer;
-  inset:0;
-  background:#ccc;
+  background:var(--card);
+  padding:25px;
   border-radius:20px;
-  transition:.4s;
-}
-
-.slider:before{
-  content:"";
-  position:absolute;
-  height:18px;
-  width:18px;
-  left:2px;
-  bottom:2px;
-  background:white;
-  border-radius:50%;
-  transition:.4s;
-}
-
-input:checked + .slider{
-  background:var(--accent);
-}
-
-input:checked + .slider:before{
-  transform:translateX(23px);
 }
 </style>
 </head>
@@ -185,11 +190,10 @@ input:checked + .slider:before{
 <body>
 
 <div class="sidebar" id="sidebar">
-  <div class="logo">Adhyayana</div>
-  <a href="#" class="nav-link">Dashboard</a>
-  <a href="#" class="nav-link">Courses</a>
-  <a href="#" class="nav-link">Withdraw</a>
-  <button class="btn" onclick="toggleSidebar()">Toggle</button>
+  <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
+  <a href="#"><span>🏠</span><span class="text">Dashboard</span></a>
+  <a href="#"><span>📚</span><span class="text">Courses</span></a>
+  <a href="#"><span>💰</span><span class="text">Withdraw</span></a>
 </div>
 
 <div class="main">
@@ -197,104 +201,139 @@ input:checked + .slider:before{
 <div class="topbar">
   <h2>Dashboard</h2>
 
-  <div>
-    <!-- Dark Mode Toggle -->
-    <label class="switch">
-      <input type="checkbox" onclick="toggleTheme()">
-      <span class="slider"></span>
+  <div class="top-right">
+
+    <!-- Dark Mode Switch -->
+    <label>
+      <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+      🌙
     </label>
 
-    <!-- Profile Dropdown -->
-    <div class="profile" onclick="toggleProfile()" style="display:inline-block;margin-left:20px;">
+    <!-- Notification -->
+    <div class="notification">
+      🔔
+      <div class="badge" id="notifCount">0</div>
+    </div>
+
+    <!-- Profile -->
+    <div class="profile" onclick="toggleProfile()">
       👤
       <div class="dropdown">
-        <p>My Profile</p>
+        <p>Profile</p>
         <p>Settings</p>
         <p>Logout</p>
       </div>
     </div>
+
   </div>
 </div>
 
-<!-- STATS WITH ANIMATED COUNTER -->
+<!-- STATS -->
 <div class="stats">
   <div class="stat-card">
-    <div class="stat-number" id="count1">0</div>
+    <div class="stat-number" id="totalRevenue">0</div>
     Total Revenue
   </div>
   <div class="stat-card">
-    <div class="stat-number" id="count2">0</div>
+    <div class="stat-number" id="teacherRevenue">0</div>
     Earnings
   </div>
   <div class="stat-card">
-    <div class="stat-number" id="count3">0</div>
+    <div class="stat-number" id="availableBalance">0</div>
     Available
   </div>
 </div>
 
-<!-- REVENUE CHART -->
+<!-- CHART -->
 <div class="chart-card">
   <canvas id="revenueChart"></canvas>
 </div>
 
 </div>
 
-<script>
-/* ===== Sidebar Collapse ===== */
-function toggleSidebar(){
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, query, where, getDocs } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+/* FIREBASE CONFIG */
+const firebaseConfig = { YOUR_FIREBASE_CONFIG };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* SAVE THEME IN LOCAL STORAGE */
+if(localStorage.getItem("theme")==="light"){
+  document.body.classList.add("light");
+  document.getElementById("themeToggle").checked=true;
+}
+
+window.toggleTheme=function(){
+  document.body.classList.toggle("light");
+  localStorage.setItem("theme",
+    document.body.classList.contains("light") ? "light" : "dark"
+  );
+}
+
+/* SIDEBAR COLLAPSE */
+window.toggleSidebar=function(){
   document.getElementById("sidebar").classList.toggle("collapsed");
 }
 
-/* ===== Dark Light Mode ===== */
-function toggleTheme(){
-  document.body.classList.toggle("light");
-}
-
-/* ===== Profile Dropdown ===== */
-function toggleProfile(){
+/* PROFILE DROPDOWN */
+window.toggleProfile=function(){
   document.querySelector(".profile").classList.toggle("open");
 }
 
-/* ===== Animated Counters ===== */
-function animateCounter(id,target){
-  let count=0;
-  let increment=target/100;
-  let interval=setInterval(()=>{
-    count+=increment;
-    if(count>=target){
-      count=target;
-      clearInterval(interval);
-    }
-    document.getElementById(id).innerText=Math.floor(count);
-  },20);
-}
+/* FIREBASE REVENUE AUTO LOAD */
 
-animateCounter("count1",50000);
-animateCounter("count2",40000);
-animateCounter("count3",35000);
+onAuthStateChanged(auth, async(user)=>{
+  if(!user) return;
 
-/* ===== Revenue Chart ===== */
-const ctx=document.getElementById("revenueChart").getContext("2d");
+  const snap=await getDocs(
+    query(collection(db,"purchases"),where("teacherId","==",user.uid))
+  );
 
-new Chart(ctx,{
-  type:"line",
-  data:{
-    labels:["Jan","Feb","Mar","Apr","May","Jun"],
-    datasets:[{
-      label:"Revenue",
-      data:[5000,8000,15000,12000,20000,30000],
-      borderColor:"#22c55e",
-      backgroundColor:"rgba(34,197,94,.2)",
-      tension:.4,
-      fill:true
-    }]
-  },
-  options:{
-    responsive:true,
-    plugins:{legend:{display:false}},
-    scales:{y:{beginAtZero:true}}
-  }
+  let total=0;
+  let monthlyData=[0,0,0,0,0,0];
+
+  snap.forEach(doc=>{
+    const data=doc.data();
+    total+=data.amount;
+
+    const month=new Date(data.createdAt?.seconds*1000 || Date.now()).getMonth();
+    if(month<6) monthlyData[month]+=data.amount;
+  });
+
+  document.getElementById("totalRevenue").innerText="₹"+total;
+  document.getElementById("teacherRevenue").innerText="₹"+(total*0.8);
+  document.getElementById("availableBalance").innerText="₹"+(total*0.7);
+
+  document.getElementById("notifCount").innerText=snap.size;
+
+  loadChart(monthlyData);
 });
+
+/* CHART */
+
+function loadChart(data){
+  const ctx=document.getElementById("revenueChart").getContext("2d");
+  new Chart(ctx,{
+    type:"line",
+    data:{
+      labels:["Jan","Feb","Mar","Apr","May","Jun"],
+      datasets:[{
+        data:data,
+        borderColor:"#22c55e",
+        backgroundColor:"rgba(34,197,94,.2)",
+        fill:true,
+        tension:.4
+      }]
+    },
+    options:{responsive:true,plugins:{legend:{display:false}}}
+  });
+}
 </script>
 
 </body>
