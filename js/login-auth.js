@@ -8,16 +8,16 @@ import {
   signInWithPopup,
   signOut,
   setPersistence,
-  browserSessionPersistence
-}
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  browserLocalPersistence   // ✅ CHANGED HERE
+} from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import {
   getFirestore,
   doc,
   getDoc
-}
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+} from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
 /* =========================
@@ -37,8 +37,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* 🔥 Force session-only login */
-await setPersistence(auth, browserSessionPersistence);
+/* ✅ FIX: Persistent login across pages */
+await setPersistence(auth, browserLocalPersistence);
 
 const form = document.getElementById("loginForm");
 const googleBtn = document.getElementById("googleLogin");
@@ -53,7 +53,7 @@ form.addEventListener("submit", async (e)=>{
   e.preventDefault();
 
   errorMessage.textContent = "";
-  sessionStorage.clear(); // clear old role
+  localStorage.clear();   // ✅ use localStorage now
 
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -62,7 +62,6 @@ form.addEventListener("submit", async (e)=>{
   try {
 
     const cred = await signInWithEmailAndPassword(auth,email,password);
-
     const snap = await getDoc(doc(db,"users",cred.user.uid));
 
     if(!snap.exists()){
@@ -73,7 +72,6 @@ form.addEventListener("submit", async (e)=>{
 
     const realRole = snap.data().role;
 
-    // 🔐 Strict role check
     if(realRole !== selectedRole){
       await signOut(auth);
       errorMessage.textContent =
@@ -81,15 +79,15 @@ form.addEventListener("submit", async (e)=>{
       return;
     }
 
-    sessionStorage.setItem("role", realRole);
-    sessionStorage.setItem("uid", cred.user.uid);
+    /* ✅ SAVE ROLE PROPERLY */
+    localStorage.setItem("role", realRole);
+    localStorage.setItem("uid", cred.user.uid);
 
     if(realRole === "teacher"){
-   window.location.href = "admin-analytics.html";
-} else {
-   window.location.href = "dashboard.html";
-}
-
+      window.location.href = "admin-analytics.html";
+    } else {
+      window.location.href = "dashboard.html";
+    }
 
   } catch(err){
     errorMessage.textContent = err.message;
@@ -104,7 +102,7 @@ form.addEventListener("submit", async (e)=>{
 googleBtn.addEventListener("click", async ()=>{
 
   errorMessage.textContent = "";
-  sessionStorage.clear(); // clear old session
+  localStorage.clear();
 
   const selectedRole = document.getElementById("loginRole").value;
 
@@ -112,7 +110,6 @@ googleBtn.addEventListener("click", async ()=>{
 
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth,provider);
-
     const snap = await getDoc(doc(db,"users",result.user.uid));
 
     if(!snap.exists()){
@@ -123,7 +120,6 @@ googleBtn.addEventListener("click", async ()=>{
 
     const realRole = snap.data().role;
 
-    // 🔐 Strict role check
     if(realRole !== selectedRole){
       await signOut(auth);
       errorMessage.textContent =
@@ -131,14 +127,18 @@ googleBtn.addEventListener("click", async ()=>{
       return;
     }
 
-    sessionStorage.setItem("role", realRole);
-    sessionStorage.setItem("uid", result.user.uid);
+    /* ✅ SAVE ROLE PROPERLY */
+    localStorage.setItem("role", realRole);
+    localStorage.setItem("uid", result.user.uid);
 
-    window.location.replace("dashboard.html");
+    if(realRole === "teacher"){
+      window.location.href = "admin-analytics.html";
+    } else {
+      window.location.href = "dashboard.html";
+    }
 
   } catch(err){
     errorMessage.textContent = err.message;
   }
 
 });
-
