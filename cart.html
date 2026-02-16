@@ -45,7 +45,14 @@ import {
   getDoc,
   collection,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  courseId,
+  teacherId,
+  studentId,
+  amount,
+  teacherRevenue,
+  platformRevenue,
+  createdAt
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -148,4 +155,5 @@ window.checkout = async function(total){
 
 </body>
 </html>
+
 
