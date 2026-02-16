@@ -84,7 +84,12 @@ form.addEventListener("submit", async (e)=>{
     sessionStorage.setItem("role", realRole);
     sessionStorage.setItem("uid", cred.user.uid);
 
-    window.location.replace("dashboard.html");
+    if(realRole === "teacher"){
+   window.location.href = "admin-analytics.html";
+} else {
+   window.location.href = "dashboard.html";
+}
+
 
   } catch(err){
     errorMessage.textContent = err.message;
@@ -136,3 +141,4 @@ googleBtn.addEventListener("click", async ()=>{
   }
 
 });
+
