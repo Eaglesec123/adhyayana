@@ -6,210 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-
-<style>
-
-/* Modern Animated UI – Logic Not Changed */
-
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family: 'Inter', sans-serif;
-}
-
-body{
-  min-height:100vh;
-  background: linear-gradient(-45deg,#667eea,#764ba2,#6a11cb,#2575fc);
-  background-size: 400% 400%;
-  animation: gradientMove 12s ease infinite;
-  color:white;
-  overflow:hidden;
-}
-
-@keyframes gradientMove{
-  0%{background-position:0% 50%;}
-  50%{background-position:100% 50%;}
-  100%{background-position:0% 50%;}
-}
-
-.app{
-  display:flex;
-  height:100vh;
-  backdrop-filter: blur(20px);
-}
-
-/* SIDEBAR */
-
-.sidebar{
-  width:260px;
-  background: rgba(255,255,255,0.08);
-  backdrop-filter: blur(25px);
-  padding:25px;
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-  border-right:1px solid rgba(255,255,255,0.1);
-}
-
-.brand{text-align:center;}
-.brand img{width:55px;margin-bottom:10px;}
-.brand h3{color:white; font-weight:800; letter-spacing:1px;}
-
-.sidebar nav a{
-  display:block;
-  padding:14px;
-  margin:8px 0;
-  color:white;
-  text-decoration:none;
-  border-radius:10px;
-  transition: all 0.3s ease;
-  font-weight:500;
-}
-
-.sidebar nav a:hover,
-.sidebar nav a.active{
-  background:rgba(255,255,255,0.2);
-  transform:translateX(5px);
-}
-
-.logout-btn{
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  background:linear-gradient(90deg,#ff416c,#ff4b2b);
-  color:white;
-  cursor:pointer;
-  font-weight:600;
-  transition:0.3s;
-}
-
-.logout-btn:hover{
-  transform:scale(1.05);
-}
-
-/* MAIN */
-
-.main{
-  flex:1;
-  padding:40px;
-  overflow:auto;
-  animation:fadeInMain 0.8s ease;
-}
-
-@keyframes fadeInMain{
-  from{opacity:0; transform:translateY(20px);}
-  to{opacity:1; transform:translateY(0);}
-}
-
-/* TOPBAR */
-
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:30px;
-}
-
-.topbar input{
-  padding:12px 18px;
-  border-radius:30px;
-  border:none;
-  width:280px;
-  outline:none;
-  font-size:14px;
-}
-
-.profile{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-
-.profile img{
-  width:45px;
-  height:45px;
-  border-radius:50%;
-  border:2px solid white;
-  transition:0.3s;
-}
-
-.profile img:hover{
-  transform:scale(1.1);
-}
-
-/* STATS CARDS */
-
-.stats{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:25px;
-  margin-bottom:35px;
-}
-
-.card{
-  background:rgba(255,255,255,0.1);
-  padding:28px;
-  border-radius:18px;
-  backdrop-filter: blur(25px);
-  transition:0.4s;
-  animation:cardFade 0.6s ease forwards;
-}
-
-@keyframes cardFade{
-  from{opacity:0; transform:translateY(20px);}
-  to{opacity:1; transform:translateY(0);}
-}
-
-.card:hover{
-  transform:translateY(-8px);
-  box-shadow:0 20px 40px rgba(0,0,0,0.3);
-}
-
-.card.green{
-  background:linear-gradient(45deg,#00c853,#64dd17);
-  color:white;
-}
-
-.card h3{
-  font-size:30px;
-  margin-bottom:5px;
-}
-
-/* TABLE */
-
-.table-card{
-  background:rgba(255,255,255,0.1);
-  padding:28px;
-  border-radius:18px;
-  backdrop-filter: blur(25px);
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:20px;
-}
-
-th,td{
-  padding:14px;
-  text-align:left;
-}
-
-th{
-  background:rgba(255,255,255,0.2);
-  border-radius:6px;
-}
-
-tr{
-  transition:0.3s;
-}
-
-tr:hover{
-  background:rgba(255,255,255,0.1);
-}
-
-</style>
+<link rel="stylesheet" href="css/dashboard.css">
 
 </head>
 
@@ -226,7 +23,7 @@ tr:hover{
 
       <nav>
         <a href="dashboard.html" class="active">Dashboard</a>
-        <a href="add-course.html">Add Course</a>
+        <a href="add-course.html" id="addCourseLink">Add Course</a>
         <a href="market.html">Marketplace</a>
         <a href="profile.html">Profile</a>
       </nav>
@@ -238,14 +35,48 @@ tr:hover{
   <div class="main">
 
     <div class="topbar">
+      <input type="text" placeholder="Search...">
       <div class="profile">
         <img id="topUserImage" src="">
         <span id="topUserName" style="color:white;"></span>
       </div>
     </div>
 
-    <!-- YOUR EXISTING DASHBOARD CONTENT HERE -->
-    <!-- NOTHING DELETED -->
+    <div class="stats">
+      <div class="card green">
+        <h3 id="totalCourses">0</h3>
+        <p>Total Courses</p>
+      </div>
+
+      <div class="card">
+        <h3 id="totalStudents">0</h3>
+        <p>Total Students</p>
+      </div>
+
+      <div class="card">
+        <h3>₹ <span id="totalEarnings">0</span></h3>
+        <p>Total Earnings</p>
+      </div>
+
+      <div class="card">
+        <h3 id="notifCount">0</h3>
+        <p>Notifications</p>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h3>Your Courses</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Price</th>
+            <th>Students</th>
+          </tr>
+        </thead>
+        <tbody id="courseTableBody"></tbody>
+      </table>
+    </div>
 
   </div>
 </div>
@@ -284,10 +115,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* =========================
-   AUTH CHECK + ROLE CHECK
-========================= */
-
+/* AUTH */
 onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
@@ -297,19 +125,13 @@ onAuthStateChanged(auth, async (user) => {
 
   const role = sessionStorage.getItem("role");
 
-  if (!role) {
-    await signOut(auth);
-    window.location.replace("login.html");
-    return;
+  if(role === "student"){
+    const addLink = document.getElementById("addCourseLink");
+    if(addLink){
+      addLink.style.display = "none";
+    }
   }
 
-  // 🔥 If teacher → redirect to add-course
-  if (role === "teacher") {
-    window.location.replace("add-course.html");
-    return;
-  }
-
-  // Student dashboard continues
   document.getElementById("topUserName").innerText =
     user.displayName || user.email;
 
@@ -382,10 +204,5 @@ window.logout = async function(){
 
 </script>
 
-
 </body>
 </html>
-
-
-
-
