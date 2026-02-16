@@ -2,61 +2,82 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Adhyayana Dashboard</title>
+<title>Adhyayana Pro Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 :root{
   --bg:#0f172a;
-  --card:#1e293b;
-  --text:#ffffff;
-  --accent:#22c55e;
-  --accent2:#6366f1;
+  --sidebar:#111827;
+  --card:#1f2937;
+  --text:#e5e7eb;
+  --primary:#6366f1;
+  --secondary:#22c55e;
 }
-body.light{
-  --bg:#f1f5f9;
-  --card:#ffffff;
-  --text:#0f172a;
-}
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+
 body{
-  margin:0;
-  font-family:Poppins;
-  background:linear-gradient(135deg,var(--bg),#0b1220);
-  color:var(--text);
   display:flex;
+  background:var(--bg);
+  color:var(--text);
 }
 
 /* SIDEBAR */
 .sidebar{
   width:260px;
-  background:var(--card);
+  background:linear-gradient(180deg,var(--sidebar),#0b1220);
   height:100vh;
-  padding:20px;
+  padding:25px;
   position:fixed;
-  transition:.3s;
-}
-.sidebar a{
   display:flex;
-  gap:12px;
-  padding:12px;
-  margin:10px 0;
-  text-decoration:none;
-  color:var(--text);
-  border-radius:10px;
-  transition:.3s;
+  flex-direction:column;
+  justify-content:space-between;
 }
-.sidebar a:hover{
-  background:linear-gradient(90deg,var(--accent),var(--accent2));
+
+.logo{
+  font-size:20px;
+  font-weight:700;
+  margin-bottom:40px;
+  color:white;
+}
+
+.nav a{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:14px;
+  margin:8px 0;
+  border-radius:12px;
+  text-decoration:none;
+  color:#cbd5e1;
+  transition:.3s;
+  font-weight:500;
+}
+
+.nav a:hover,
+.nav a.active{
+  background:linear-gradient(90deg,var(--primary),var(--secondary));
+  color:white;
+  transform:translateX(6px);
+}
+
+.logout{
+  padding:12px;
+  background:#ef4444;
+  border-radius:12px;
+  text-align:center;
+  cursor:pointer;
 }
 
 /* MAIN */
 .main{
-  flex:1;
   margin-left:260px;
   padding:40px;
+  width:100%;
 }
 
 /* TOPBAR */
@@ -64,7 +85,33 @@ body{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:30px;
+  margin-bottom:40px;
+}
+
+.search{
+  background:var(--card);
+  padding:12px 18px;
+  border-radius:12px;
+  width:300px;
+  border:none;
+  color:white;
+}
+
+.profile-box{
+  display:flex;
+  align-items:center;
+  gap:15px;
+}
+
+.avatar{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:linear-gradient(45deg,var(--primary),var(--secondary));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
 }
 
 /* STATS */
@@ -73,74 +120,95 @@ body{
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:25px;
 }
+
 .stat-card{
-  background:rgba(255,255,255,.05);
-  backdrop-filter:blur(15px);
+  background:var(--card);
   padding:30px;
-  border-radius:22px;
-  box-shadow:0 20px 40px rgba(0,0,0,.3);
+  border-radius:20px;
+  box-shadow:0 20px 40px rgba(0,0,0,.4);
   transition:.3s;
 }
+
 .stat-card:hover{
   transform:translateY(-8px);
 }
+
+.stat-card h3{
+  font-size:14px;
+  color:#9ca3af;
+}
+
 .stat-number{
   font-size:32px;
   font-weight:700;
-  margin-bottom:5px;
+  margin-top:10px;
 }
 
 /* CHART */
 .chart-card{
   margin-top:40px;
-  background:rgba(255,255,255,.05);
+  background:var(--card);
   padding:30px;
-  border-radius:22px;
-  backdrop-filter:blur(15px);
+  border-radius:20px;
 }
 
 /* COURSE SECTION */
-.premium-card{
-  background:rgba(255,255,255,.05);
-  padding:30px;
-  border-radius:22px;
-  backdrop-filter:blur(15px);
-  box-shadow:0 20px 40px rgba(0,0,0,.3);
+.section{
+  display:none;
 }
+.section.active{
+  display:block;
+}
+
 .course-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
   gap:25px;
 }
+
 .course-item{
-  background:rgba(255,255,255,.06);
-  padding:15px;
+  background:var(--card);
   border-radius:18px;
+  overflow:hidden;
   transition:.3s;
 }
+
 .course-item:hover{
-  transform:scale(1.05);
+  transform:scale(1.04);
 }
+
 .course-item img{
   width:100%;
-  height:140px;
+  height:150px;
   object-fit:cover;
-  border-radius:14px;
 }
-.upload-form{
-  display:grid;
-  gap:15px;
+
+.course-info{
+  padding:15px;
 }
-.upload-form input{
+
+.upload-card{
+  background:var(--card);
+  padding:25px;
+  border-radius:20px;
+  margin-top:30px;
+}
+
+.upload-card input{
+  width:100%;
   padding:12px;
+  margin:10px 0;
   border-radius:10px;
   border:none;
+  background:#111827;
+  color:white;
 }
-.premium-btn{
-  padding:14px;
+
+.upload-btn{
+  background:linear-gradient(90deg,var(--primary),var(--secondary));
+  padding:12px;
   border:none;
   border-radius:12px;
-  background:linear-gradient(90deg,#22c55e,#16a34a);
   color:white;
   font-weight:600;
   cursor:pointer;
@@ -151,30 +219,42 @@ body{
 <body>
 
 <div class="sidebar">
-  <a href="#" onclick="showSection('dashboardSection')">🏠 Dashboard</a>
-  <a href="#" onclick="showSection('coursesSection')">📚 Courses</a>
+  <div>
+    <div class="logo">🚀 Adhyayana</div>
+    <div class="nav">
+      <a href="#" class="active" onclick="switchSection('dashboard')">🏠 Dashboard</a>
+      <a href="#" onclick="switchSection('courses')">📚 Courses</a>
+    </div>
+  </div>
+  <div class="logout">Logout</div>
 </div>
 
 <div class="main">
 
-<div id="dashboardSection">
-
 <div class="topbar">
-  <h2>Dashboard</h2>
+  <input class="search" placeholder="Search...">
+  <div class="profile-box">
+    <div class="avatar">A</div>
+  </div>
 </div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="section active">
 
 <div class="stats">
   <div class="stat-card">
+    <h3>Total Revenue</h3>
     <div class="stat-number" id="totalRevenue">₹0</div>
-    Total Revenue
   </div>
+
   <div class="stat-card">
+    <h3>Earnings</h3>
     <div class="stat-number" id="teacherRevenue">₹0</div>
-    Earnings
   </div>
+
   <div class="stat-card">
+    <h3>Available Balance</h3>
     <div class="stat-number" id="availableBalance">₹0</div>
-    Available
   </div>
 </div>
 
@@ -184,23 +264,18 @@ body{
 
 </div>
 
-<!-- COURSES SECTION -->
-<div id="coursesSection" style="display:none; margin-top:20px;">
+<!-- COURSES -->
+<div id="courses" class="section">
 
-  <div class="premium-card">
-    <h3>📖 Uploaded Courses</h3>
-    <div id="uploadedCourses" class="course-grid"></div>
-  </div>
+<div class="course-grid" id="uploadedCourses"></div>
 
-  <div class="premium-card" style="margin-top:30px;">
-    <h3>⬆ Upload New Course</h3>
-    <div class="upload-form">
-      <input type="text" id="courseTitle" placeholder="Course Title">
-      <input type="number" id="coursePrice" placeholder="Course Price">
-      <input type="text" id="courseImage" placeholder="Thumbnail URL">
-      <button onclick="uploadCourse()" class="premium-btn">Upload Course</button>
-    </div>
-  </div>
+<div class="upload-card">
+  <h3>Upload New Course</h3>
+  <input type="text" id="courseTitle" placeholder="Course Title">
+  <input type="number" id="coursePrice" placeholder="Course Price">
+  <input type="text" id="courseImage" placeholder="Thumbnail URL">
+  <button class="upload-btn" onclick="uploadCourse()">Upload Course</button>
+</div>
 
 </div>
 
@@ -218,11 +293,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* Section switch */
-window.showSection=function(id){
-  document.getElementById("dashboardSection").style.display="none";
-  document.getElementById("coursesSection").style.display="none";
-  document.getElementById(id).style.display="block";
+/* Section Switch */
+window.switchSection=function(id){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 }
 
 /* Upload Course */
@@ -230,6 +304,7 @@ window.uploadCourse=async function(){
   const title=document.getElementById("courseTitle").value;
   const price=document.getElementById("coursePrice").value;
   const image=document.getElementById("courseImage").value;
+
   if(!title||!price) return alert("Fill all fields");
 
   await addDoc(collection(db,"courses"),{
@@ -243,11 +318,12 @@ window.uploadCourse=async function(){
   alert("Course Uploaded ✅");
 }
 
-/* Load Uploaded Courses */
+/* Load Courses */
 onAuthStateChanged(auth,(user)=>{
   if(!user) return;
 
   const q=query(collection(db,"courses"),where("creatorId","==",user.uid));
+
   onSnapshot(q,(snap)=>{
     const container=document.getElementById("uploadedCourses");
     container.innerHTML="";
@@ -255,9 +331,11 @@ onAuthStateChanged(auth,(user)=>{
       const c=doc.data();
       container.innerHTML+=`
         <div class="course-item">
-          <img src="${c.thumbnail||'images/default-course.png'}">
-          <h4>${c.title}</h4>
-          <p>₹${c.price}</p>
+          <img src="${c.thumbnail||'https://via.placeholder.com/300'}">
+          <div class="course-info">
+            <h4>${c.title}</h4>
+            <p>₹${c.price}</p>
+          </div>
         </div>
       `;
     });
