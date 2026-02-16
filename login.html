@@ -5,199 +5,67 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login | Adhyayana</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
-
-body{
-  height:100vh;
-  background:#05070d;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-}
-
-.card{
-  width:380px;
-  background:#0d1117;
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:20px;
-  padding:40px;
-  text-align:center;
-  box-shadow:0 0 40px rgba(0,0,0,0.6);
-}
-
-.logo{
-  width:50px;
-  height:50px;
-  background:#111827;
-  border-radius:12px;
-  margin:0 auto 20px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:600;
-  color:#4f8cff;
-}
-
-input{
-  width:100%;
-  padding:14px;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,0.08);
-  background:#0b0f14;
-  color:#fff;
-  margin-bottom:15px;
-}
-
-.login-btn{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:10px;
-  background:#1f6feb;
-  color:white;
-  font-weight:600;
-  cursor:pointer;
-}
-
-.divider{
-  margin:25px 0;
-  color:#666;
-}
-
-.social-btn{
-  width:100%;
-  padding:12px;
-  background:#111827;
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:10px;
-  cursor:pointer;
-  color:#fff;
-}
-
-.link{
-  margin-top:15px;
-  font-size:14px;
-}
-
-.link a{
-  color:#4f8cff;
-  text-decoration:none;
-}
-
-.error{
-  margin-top:10px;
-  color:#ff6b6b;
-  font-size:14px;
-}
-</style>
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;600&display=swap" rel="stylesheet">
 </head>
 
-<body>
+<body class="auth-body">
 
-<div class="card">
+<div class="auth-wrapper">
 
-<div class="logo">A</div>
+  <div class="auth-logo">
+    <img src="logo.png" alt="Adhyayana Logo">
+    <h2>ADHYAYANA</h2>
+  </div>
 
-<h2>Welcome Back</h2>
+  <div class="auth-card auth-animate login-card">
 
-<form id="loginForm">
-<input type="email" id="email" placeholder="Email address" required>
-<input type="password" id="password" placeholder="Password" required>
-<button type="submit" class="login-btn">Login</button>
-</form>
+    <h3>Welcome Back 👋</h3>
+    <p class="auth-sub">Login to continue learning</p>
 
-<div class="divider">OR</div>
+    <form id="loginForm">
 
-<button class="social-btn" id="googleLogin">
-Login with Google
-</button>
+      <input type="email" id="email" placeholder="Email address" required>
 
-<div class="link">
-<a href="signup.html">Create Account</a> | 
-<a href="index.html">Go Home</a>
+      <div class="password-field">
+        <input type="password" id="password" placeholder="Password" required>
+        <span class="toggle-password" id="toggleLoginPassword">👁</span>
+      </div>
+
+      <!-- ROLE -->
+      <select id="loginRole" required>
+        <option value="student">Student</option>
+        <option value="teacher">Teacher</option>
+      </select>
+
+      <button type="submit" class="btn primary full">
+        Login
+      </button>
+
+    </form>
+
+    <div class="divider">OR</div>
+
+    <button id="googleLogin" class="google-btn" type="button">
+      <img src="images/google.png" alt="Google">
+      <span>Continue with Google</span>
+    </button>
+
+    <div class="auth-footer">
+      <p class="auth-switch">
+        Don’t have an account?
+        <a href="signup.html">Sign Up</a>
+      </p>
+      <a href="index.html" class="back-home">← Back to Home</a>
+    </div>
+
+    <p id="errorMessage" class="error"></p>
+
+  </div>
 </div>
 
-<p id="error" class="error"></p>
-
-</div>
-
-<script type="module">
-
-import { initializeApp } from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-  onAuthStateChanged
-}
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-import {
-  getFirestore,
-  doc,
-  getDoc
-}
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
-  authDomain: "login-65d4b.firebaseapp.com",
-  projectId: "login-65d4b",
-  storageBucket: "login-65d4b.appspot.com",
-  messagingSenderId: "239979806578",
-  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-/* EMAIL LOGIN */
-loginForm.addEventListener("submit", async(e)=>{
-  e.preventDefault();
-  error.innerText="";
-  try{
-    const cred = await signInWithEmailAndPassword(auth,email.value,password.value);
-
-    const snap = await getDoc(doc(db,"users",cred.user.uid));
-
-    if(!snap.exists()){
-      error.innerText = "User role not found.";
-      return;
-    }
-
-    window.location.replace("dashboard.html");
-
-  }catch(err){
-    error.innerText=err.message;
-  }
-});
-
-/* GOOGLE LOGIN */
-const provider = new GoogleAuthProvider();
-
-googleLogin.addEventListener("click", async()=>{
-  try{
-    await signInWithPopup(auth, provider);
-  }catch(err){
-    error.innerText = err.message;
-  }
-});
-
-onAuthStateChanged(auth, (user)=>{
-  if(user){
-    window.location.replace("dashboard.html");
-  }
-});
-
-</script>
+<script type="module" src="js/login-auth.js"></script>
+<script src="js/password-toggle.js"></script>
 
 </body>
 </html>
