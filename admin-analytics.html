@@ -4,16 +4,17 @@
 <meta charset="UTF-8">
 <title>Admin Analytics</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
 <style>
 body{
   margin:0;
   font-family:'Inter',sans-serif;
-  background:#f1f5f9;
+  background:#0f172a;
+  color:white;
+}
+
+.container{
   padding:40px;
 }
 
@@ -21,7 +22,7 @@ h2{
   margin-bottom:30px;
 }
 
-.grid{
+.cards{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:20px;
@@ -29,58 +30,87 @@ h2{
 }
 
 .card{
-  background:white;
-  padding:20px;
-  border-radius:14px;
-  box-shadow:0 10px 25px rgba(0,0,0,0.05);
+  background:#1e293b;
+  padding:25px;
+  border-radius:16px;
+  transition:0.4s;
 }
 
-.card h3{
-  margin-bottom:10px;
+.card:hover{
+  transform:translateY(-6px);
+  box-shadow:0 15px 30px rgba(0,0,0,0.5);
 }
 
-.big{
-  font-size:24px;
-  font-weight:700;
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
 }
 
-.chart-box{
-  background:white;
-  padding:20px;
-  border-radius:14px;
-  box-shadow:0 10px 25px rgba(0,0,0,0.05);
+th,td{
+  padding:12px;
+  text-align:left;
+}
+
+th{
+  background:#111827;
+}
+
+tr:hover{
+  background:#1e293b;
+}
+
+.button{
+  display:inline-block;
+  margin-bottom:20px;
+  padding:10px 18px;
+  background:#2563eb;
+  border-radius:8px;
+  text-decoration:none;
+  color:white;
 }
 </style>
 </head>
 
 <body>
 
-<h2>📊 Admin Analytics Dashboard</h2>
+<div class="container">
 
-<div class="grid">
+<h2>Admin Analytics</h2>
+
+<a href="add-course.html" class="button">+ Add Course</a>
+
+<div class="cards">
   <div class="card">
-    <h3>Total Courses</h3>
-    <div class="big" id="totalCourses">0</div>
+    <h3 id="totalCourses">0</h3>
+    <p>Total Courses</p>
   </div>
 
   <div class="card">
-    <h3>Total Purchases</h3>
-    <div class="big" id="totalPurchases">0</div>
+    <h3 id="totalStudents">0</h3>
+    <p>Total Students</p>
   </div>
 
   <div class="card">
-    <h3>Total Revenue</h3>
-    <div class="big" id="totalRevenue">₹ 0</div>
-  </div>
-
-  <div class="card">
-    <h3>Best Seller</h3>
-    <div class="big" id="bestSeller">-</div>
+    <h3>₹ <span id="totalRevenue">0</span></h3>
+    <p>Total Revenue</p>
   </div>
 </div>
 
-<div class="chart-box">
-  <canvas id="revenueChart"></canvas>
+<h3>Your Courses</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Price</th>
+      <th>Students</th>
+      <th>Revenue</th>
+    </tr>
+  </thead>
+  <tbody id="courseTableBody"></tbody>
+</table>
+
 </div>
 
 <script type="module">
@@ -88,7 +118,20 @@ h2{
 import { initializeApp } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
-import { getFirestore, collection, getDocs }
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+}
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs
+}
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -101,72 +144,71 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
 
-loadAnalytics();
+onAuthStateChanged(auth, async(user)=>{
 
-async function loadAnalytics(){
-
-  const snapshot = await getDocs(collection(db,"courses"));
-
-  let totalCourses = 0;
-  let totalRevenue = 0;
-  let totalPurchases = 0;
-
-  let revenuePerCourse = {};
-  let purchaseCount = {};
-
-  // Purchased data stored in browser
-  const purchased = JSON.parse(localStorage.getItem("purchased")) || [];
-
-  snapshot.forEach(docSnap=>{
-    totalCourses++;
-    const course = docSnap.data();
-    const id = docSnap.id;
-    const price = Number(course.price || 0);
-
-    // Count purchases
-    let count = purchased.filter(p=>p===id).length;
-
-    totalPurchases += count;
-
-    revenuePerCourse[course.title] = price * count;
-    purchaseCount[course.title] = count;
-
-    totalRevenue += price * count;
-  });
-
-  document.getElementById("totalCourses").innerText = totalCourses;
-  document.getElementById("totalPurchases").innerText = totalPurchases;
-  document.getElementById("totalRevenue").innerText = "₹ " + totalRevenue;
-
-  // Find best seller
-  let bestCourse = "-";
-  let max = 0;
-
-  for(let title in purchaseCount){
-    if(purchaseCount[title] > max){
-      max = purchaseCount[title];
-      bestCourse = title;
-    }
+  if(!user){
+    window.location="login.html";
+    return;
   }
 
-  document.getElementById("bestSeller").innerText = bestCourse;
+  const role = sessionStorage.getItem("role");
 
-  // Chart
-  const ctx = document.getElementById("revenueChart");
+  if(role !== "teacher"){
+    window.location="dashboard.html";
+    return;
+  }
 
-  new Chart(ctx,{
-    type:'bar',
-    data:{
-      labels:Object.keys(revenuePerCourse),
-      datasets:[{
-        label:'Revenue per Course',
-        data:Object.values(revenuePerCourse),
-        borderWidth:1
-      }]
-    }
+  loadAnalytics(user.uid);
+});
+
+async function loadAnalytics(uid){
+
+  let totalStudents = 0;
+  let totalRevenue = 0;
+  let tableBody = document.getElementById("courseTableBody");
+  tableBody.innerHTML = "";
+
+  const courseQuery = query(
+    collection(db,"courses"),
+    where("creatorId","==",uid)
+  );
+
+  const courseSnap = await getDocs(courseQuery);
+  document.getElementById("totalCourses").innerText = courseSnap.size;
+
+  const purchaseSnap = await getDocs(collection(db,"purchases"));
+
+  courseSnap.forEach(courseDoc => {
+
+    const course = courseDoc.data();
+    let students = 0;
+    let revenue = 0;
+
+    purchaseSnap.forEach(pDoc=>{
+      const p = pDoc.data();
+      if(p.courseId === courseDoc.id){
+        students++;
+        totalStudents++;
+        revenue += Number(p.price || 0);
+        totalRevenue += Number(p.price || 0);
+      }
+    });
+
+    tableBody.innerHTML += `
+      <tr>
+        <td>${course.title}</td>
+        <td>₹ ${course.price}</td>
+        <td>${students}</td>
+        <td>₹ ${revenue}</td>
+      </tr>
+    `;
   });
+
+  document.getElementById("totalStudents").innerText = totalStudents;
+  document.getElementById("totalRevenue").innerText = totalRevenue;
 }
 
 </script>
