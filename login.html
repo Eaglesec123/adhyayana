@@ -25,16 +25,21 @@
 
     <form id="loginForm">
 
+      <!-- ROLE SELECTION -->
       <div style="display:flex; gap:15px; margin-bottom:15px;">
         <label>
           <input type="radio" name="role" value="student" checked> Student
         </label>
+
         <label>
           <input type="radio" name="role" value="teacher"> Teacher
         </label>
       </div>
 
+      <!-- EMAIL -->
       <input type="email" id="email" placeholder="Email Address" required>
+
+      <!-- PASSWORD -->
       <input type="password" id="password" placeholder="Password" required>
 
       <button class="btn primary full" type="submit">
@@ -62,7 +67,8 @@ import { initializeApp } from
 
 import {
   getAuth,
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
+  signOut
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -85,45 +91,58 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const error=document.getElementById("error");
 
-loginForm.addEventListener("submit", async(e)=>{
+const error = document.getElementById("error");
+
+/* SECURE LOGIN */
+document.getElementById("loginForm")
+.addEventListener("submit", async (e)=>{
   e.preventDefault();
   error.innerText="";
 
-  const selectedRole = 
+  const selectedRole =
     document.querySelector('input[name="role"]:checked').value;
 
   try{
+
+    // 1. Sign in
     const userCred = await signInWithEmailAndPassword(
       auth,
-      email.value,
-      password.value
+      document.getElementById("email").value.trim(),
+      document.getElementById("password").value
     );
 
-    const userDoc = await getDoc(doc(db,"users",userCred.user.uid));
+    const user = userCred.user;
 
-    if(!userDoc.exists()){
-      error.innerText="User data not found.";
-      await auth.signOut();
+    // 2. Get role from Firestore
+    const userSnap = await getDoc(doc(db,"users",user.uid));
+
+    if(!userSnap.exists()){
+      error.innerText="Account not properly registered.";
+      await signOut(auth);
       return;
     }
 
-    const savedRole=userDoc.data().role;
+    const savedRole = userSnap.data().role;
 
-    if(savedRole!==selectedRole){
-      error.innerText="This account is registered as "+savedRole;
-      await auth.signOut();
+    // 3. Check role match
+    if(savedRole !== selectedRole){
+      error.innerText =
+        "Access denied. This account is registered as " + savedRole + ".";
+      await signOut(auth);
       return;
     }
 
+    // 4. Login success
     window.location.replace("dashboard.html");
 
   }catch(err){
     error.innerText=err.message;
   }
+
 });
 
 </script>
+
 </body>
 </html>
