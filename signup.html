@@ -8,28 +8,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
 <style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Inter',sans-serif;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
 
 body{
   height:100vh;
-  background:linear-gradient(135deg,#667eea,#764ba2);
   display:flex;
   justify-content:center;
   align-items:center;
+  background:linear-gradient(135deg,#667eea,#764ba2);
 }
 
 .container{
-  width:400px;
+  width:380px;
   background:white;
   padding:40px 30px;
   border-radius:20px;
   box-shadow:0 20px 50px rgba(0,0,0,0.2);
-  animation:fadeIn 0.8s ease-in-out;
+  animation:fadeIn .8s ease-in-out;
 }
 
 @keyframes fadeIn{
@@ -37,10 +32,7 @@ body{
   to{opacity:1;transform:translateY(0);}
 }
 
-h2{
-  text-align:center;
-  margin-bottom:25px;
-}
+h2{text-align:center;margin-bottom:25px;}
 
 input,select{
   width:100%;
@@ -48,7 +40,6 @@ input,select{
   margin-bottom:15px;
   border-radius:10px;
   border:1px solid #ddd;
-  font-size:14px;
 }
 
 button{
@@ -60,40 +51,30 @@ button{
   color:white;
   font-weight:600;
   cursor:pointer;
-  transition:.3s;
   margin-bottom:10px;
 }
 
-button:hover{
-  background:#5563d1;
-}
-
 .google-btn{
-  background:#ea4335;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  background:#fff;
+  color:#444;
+  border:1px solid #ddd;
 }
 
-.google-btn:hover{
-  background:#d93025;
-}
+.google-btn img{width:20px;}
 
-.link{
-  text-align:center;
-  margin-top:10px;
-  font-size:14px;
-}
-
-.link a{
-  color:#667eea;
-  text-decoration:none;
-  font-weight:600;
-}
+.link{text-align:center;font-size:14px;margin-top:10px;}
+.link a{color:#667eea;text-decoration:none;font-weight:600;}
 </style>
 </head>
 
 <body>
 
 <div class="container">
-  <h2>Create Account</h2>
+  <h2>Sign Up</h2>
 
   <input type="email" id="email" placeholder="Email">
   <input type="password" id="password" placeholder="Password">
@@ -103,8 +84,12 @@ button:hover{
     <option value="teacher">Teacher</option>
   </select>
 
-  <button onclick="signupUser()">Sign Up</button>
-  <button class="google-btn" onclick="googleSignup()">Sign Up with Google</button>
+  <button onclick="signupUser()">Create Account</button>
+
+  <button class="google-btn" onclick="googleSignup()">
+    <img src="https://developers.google.com/identity/images/g-logo.png">
+    Sign up with Google
+  </button>
 
   <div class="link">
     Already have account? <a href="login.html">Login</a>
@@ -135,7 +120,6 @@ import {
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-
 const firebaseConfig = {
   apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
   authDomain: "login-65d4b.firebaseapp.com",
@@ -149,35 +133,24 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-
-/* AUTO REDIRECT IF LOGGED IN */
 onAuthStateChanged(auth,(user)=>{
   if(user){
     window.location.replace("dashboard.html");
   }
 });
 
-
-/* EMAIL SIGNUP */
 window.signupUser = async function(){
-
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const role = document.getElementById("role").value;
-
-  if(!email || !password){
-    alert("Please fill all fields");
-    return;
-  }
+  const email=document.getElementById("email").value;
+  const password=document.getElementById("password").value;
+  const role=document.getElementById("role").value;
 
   try{
-
-    const userCred = await createUserWithEmailAndPassword(auth,email,password);
+    const userCred=await createUserWithEmailAndPassword(auth,email,password);
 
     await setDoc(doc(db,"users",userCred.user.uid),{
-      email: email,
-      role: role,
-      createdAt: serverTimestamp()
+      email:email,
+      role:role,
+      createdAt:serverTimestamp()
     });
 
     window.location.replace("dashboard.html");
@@ -187,25 +160,20 @@ window.signupUser = async function(){
   }
 }
 
-
-/* GOOGLE SIGNUP */
 window.googleSignup = async function(){
-
-  const provider = new GoogleAuthProvider();
+  const provider=new GoogleAuthProvider();
 
   try{
+    const result=await signInWithPopup(auth,provider);
 
-    const result = await signInWithPopup(auth,provider);
+    const userRef=doc(db,"users",result.user.uid);
+    const snap=await getDoc(userRef);
 
-    const userRef = doc(db,"users",result.user.uid);
-    const snap = await getDoc(userRef);
-
-    // If new user
     if(!snap.exists()){
       await setDoc(userRef,{
-        email: result.user.email,
-        role: "student",
-        createdAt: serverTimestamp()
+        email:result.user.email,
+        role:"student",
+        createdAt:serverTimestamp()
       });
     }
 
@@ -214,7 +182,6 @@ window.googleSignup = async function(){
   }catch(error){
     alert(error.message);
   }
-
 }
 
 </script>
