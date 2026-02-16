@@ -6,277 +6,296 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:'Poppins',sans-serif;
+:root{
+  --bg:#0f172a;
+  --card:#1e293b;
+  --text:white;
+  --accent:#22c55e;
+}
+
+body.light{
+  --bg:#f1f5f9;
+  --card:white;
+  --text:#0f172a;
 }
 
 body{
-  background:#0f172a;
-  color:white;
+  margin:0;
+  font-family:Poppins;
+  background:var(--bg);
+  color:var(--text);
   display:flex;
-  min-height:100vh;
+  transition:.3s;
 }
 
 /* ===== SIDEBAR ===== */
 
 .sidebar{
   width:260px;
-  background:linear-gradient(180deg,#111827,#0f172a);
+  background:var(--card);
+  height:100vh;
+  transition:.3s;
   padding:30px 20px;
-  border-right:1px solid rgba(255,255,255,0.05);
+}
+
+.sidebar.collapsed{
+  width:80px;
 }
 
 .logo{
-  font-size:22px;
+  font-size:20px;
   font-weight:700;
   margin-bottom:40px;
-  text-align:center;
-  color:#22c55e;
 }
 
 .nav-link{
   display:block;
-  padding:14px;
+  padding:12px;
   margin:10px 0;
+  border-radius:10px;
   text-decoration:none;
-  color:#94a3b8;
-  border-radius:12px;
+  color:var(--text);
   transition:.3s;
-  font-weight:500;
 }
 
 .nav-link:hover{
-  background:rgba(34,197,94,0.1);
-  color:#22c55e;
-  transform:translateX(5px);
-}
-
-.upload-btn{
-  margin-top:20px;
-  padding:14px;
-  width:100%;
-  border:none;
-  border-radius:14px;
-  background:linear-gradient(90deg,#22c55e,#16a34a);
-  color:white;
-  font-weight:600;
-  cursor:pointer;
-  transition:.3s;
-}
-
-.upload-btn:hover{
-  transform:translateY(-3px);
-  box-shadow:0 15px 25px rgba(34,197,94,0.4);
+  background:rgba(34,197,94,.2);
 }
 
 /* ===== MAIN ===== */
 
 .main{
   flex:1;
-  padding:50px;
-  overflow:auto;
+  padding:30px;
 }
 
-.section{
-  margin-bottom:50px;
+/* TOPBAR */
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:30px;
 }
 
-.section-title{
-  font-size:20px;
-  font-weight:600;
-  margin-bottom:20px;
+.profile{
+  position:relative;
+  cursor:pointer;
 }
 
-/* ===== STATS ===== */
+.dropdown{
+  position:absolute;
+  right:0;
+  top:40px;
+  background:var(--card);
+  padding:15px;
+  border-radius:12px;
+  display:none;
+}
+
+.profile.open .dropdown{
+  display:block;
+}
+
+/* STATS */
 
 .stats{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:25px;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:20px;
 }
 
 .stat-card{
-  background:rgba(30,41,59,.8);
-  backdrop-filter:blur(12px);
-  padding:30px;
+  background:var(--card);
+  padding:25px;
   border-radius:20px;
-  box-shadow:0 20px 40px rgba(0,0,0,.4);
-  transition:.4s;
-}
-
-.stat-card:hover{
-  transform:translateY(-6px);
+  box-shadow:0 10px 30px rgba(0,0,0,.3);
 }
 
 .stat-number{
-  font-size:30px;
+  font-size:26px;
   font-weight:700;
-  margin-bottom:8px;
 }
 
-/* ===== WITHDRAW CARD ===== */
+/* CHART */
 
-.withdraw-card{
-  background:rgba(30,41,59,.8);
+.chart-card{
+  background:var(--card);
   padding:30px;
   border-radius:20px;
-  max-width:420px;
-  box-shadow:0 20px 40px rgba(0,0,0,.4);
+  margin-top:30px;
 }
 
-.withdraw-card input{
-  width:100%;
-  padding:12px;
-  border-radius:12px;
-  border:none;
-  margin-bottom:15px;
-  outline:none;
-}
+/* BUTTONS */
 
-.withdraw-btn{
-  width:100%;
-  padding:12px;
+.btn{
+  padding:8px 15px;
   border:none;
-  border-radius:14px;
-  background:linear-gradient(90deg,#f59e0b,#d97706);
-  color:white;
-  font-weight:600;
+  border-radius:8px;
   cursor:pointer;
-  transition:.3s;
+  background:var(--accent);
+  color:white;
 }
 
-.withdraw-btn:hover{
-  transform:translateY(-3px);
-  box-shadow:0 10px 25px rgba(245,158,11,.4);
-}
-
-/* ===== COURSE CARDS ===== */
-
-.course-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-  gap:25px;
-}
-
-.course-card{
-  background:rgba(30,41,59,.8);
-  padding:25px;
-  border-radius:18px;
-  box-shadow:0 15px 30px rgba(0,0,0,.4);
-  transition:.3s;
-}
-
-.course-card:hover{
-  transform:translateY(-6px);
-}
+/* TOGGLE SWITCH */
 
 .switch{
   position:relative;
   display:inline-block;
-  width:50px;
-  height:26px;
-  margin-top:12px;
+  width:45px;
+  height:22px;
 }
 
-.switch input{
-  opacity:0;
-  width:0;
-  height:0;
-}
+.switch input{display:none;}
 
 .slider{
   position:absolute;
   cursor:pointer;
-  top:0;left:0;right:0;bottom:0;
-  background-color:#64748b;
+  inset:0;
+  background:#ccc;
+  border-radius:20px;
   transition:.4s;
-  border-radius:34px;
 }
 
 .slider:before{
-  position:absolute;
   content:"";
-  height:20px;
-  width:20px;
-  left:3px;
-  bottom:3px;
+  position:absolute;
+  height:18px;
+  width:18px;
+  left:2px;
+  bottom:2px;
   background:white;
-  transition:.4s;
   border-radius:50%;
+  transition:.4s;
 }
 
 input:checked + .slider{
-  background-color:#22c55e;
+  background:var(--accent);
 }
 
 input:checked + .slider:before{
-  transform:translateX(24px);
+  transform:translateX(23px);
 }
 </style>
 </head>
 
 <body>
 
-<div class="sidebar">
+<div class="sidebar" id="sidebar">
   <div class="logo">Adhyayana</div>
   <a href="#" class="nav-link">Dashboard</a>
-  <a href="#" class="nav-link">Profile</a>
-  <button class="upload-btn" onclick="window.location='add-course.html'">
-    Upload Course
-  </button>
+  <a href="#" class="nav-link">Courses</a>
+  <a href="#" class="nav-link">Withdraw</a>
+  <button class="btn" onclick="toggleSidebar()">Toggle</button>
 </div>
 
 <div class="main">
 
-<div class="section">
-  <div class="section-title">Revenue Overview</div>
-  <div class="stats">
-    <div class="stat-card">
-      <div class="stat-number" id="totalCourses">0</div>
-      Total Courses
-    </div>
-    <div class="stat-card">
-      <div class="stat-number" id="totalRevenue">₹0</div>
-      Total Revenue
-    </div>
-    <div class="stat-card">
-      <div class="stat-number" id="teacherRevenue">₹0</div>
-      Earnings
-    </div>
-    <div class="stat-card">
-      <div class="stat-number" id="availableBalance">₹0</div>
-      Available Balance
+<div class="topbar">
+  <h2>Dashboard</h2>
+
+  <div>
+    <!-- Dark Mode Toggle -->
+    <label class="switch">
+      <input type="checkbox" onclick="toggleTheme()">
+      <span class="slider"></span>
+    </label>
+
+    <!-- Profile Dropdown -->
+    <div class="profile" onclick="toggleProfile()" style="display:inline-block;margin-left:20px;">
+      👤
+      <div class="dropdown">
+        <p>My Profile</p>
+        <p>Settings</p>
+        <p>Logout</p>
+      </div>
     </div>
   </div>
 </div>
 
-<div class="section">
-  <div class="section-title">Withdraw Earnings</div>
-  <div class="withdraw-card">
-    <input type="number" id="withdrawAmount" placeholder="Enter amount">
-    <button class="withdraw-btn" id="withdrawBtn">
-      Withdraw (Min ₹100)
-    </button>
-    <br><br>
-    <div id="withdrawStatus"></div>
+<!-- STATS WITH ANIMATED COUNTER -->
+<div class="stats">
+  <div class="stat-card">
+    <div class="stat-number" id="count1">0</div>
+    Total Revenue
+  </div>
+  <div class="stat-card">
+    <div class="stat-number" id="count2">0</div>
+    Earnings
+  </div>
+  <div class="stat-card">
+    <div class="stat-number" id="count3">0</div>
+    Available
   </div>
 </div>
 
-<div class="section">
-  <div class="section-title">Your Courses</div>
-  <div id="courseContainer" class="course-grid"></div>
+<!-- REVENUE CHART -->
+<div class="chart-card">
+  <canvas id="revenueChart"></canvas>
 </div>
 
 </div>
 
-<!-- KEEP YOUR EXISTING SCRIPT HERE -->
-<!-- DO NOT REMOVE FIREBASE LOGIC -->
-<!-- Only UI changed -->
+<script>
+/* ===== Sidebar Collapse ===== */
+function toggleSidebar(){
+  document.getElementById("sidebar").classList.toggle("collapsed");
+}
+
+/* ===== Dark Light Mode ===== */
+function toggleTheme(){
+  document.body.classList.toggle("light");
+}
+
+/* ===== Profile Dropdown ===== */
+function toggleProfile(){
+  document.querySelector(".profile").classList.toggle("open");
+}
+
+/* ===== Animated Counters ===== */
+function animateCounter(id,target){
+  let count=0;
+  let increment=target/100;
+  let interval=setInterval(()=>{
+    count+=increment;
+    if(count>=target){
+      count=target;
+      clearInterval(interval);
+    }
+    document.getElementById(id).innerText=Math.floor(count);
+  },20);
+}
+
+animateCounter("count1",50000);
+animateCounter("count2",40000);
+animateCounter("count3",35000);
+
+/* ===== Revenue Chart ===== */
+const ctx=document.getElementById("revenueChart").getContext("2d");
+
+new Chart(ctx,{
+  type:"line",
+  data:{
+    labels:["Jan","Feb","Mar","Apr","May","Jun"],
+    datasets:[{
+      label:"Revenue",
+      data:[5000,8000,15000,12000,20000,30000],
+      borderColor:"#22c55e",
+      backgroundColor:"rgba(34,197,94,.2)",
+      tension:.4,
+      fill:true
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{display:false}},
+    scales:{y:{beginAtZero:true}}
+  }
+});
+</script>
 
 </body>
 </html>
