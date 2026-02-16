@@ -30,19 +30,21 @@ body{
   margin:10px 0;
   background:#1f2937;
   border-radius:8px;
-  text-decoration:none;
   color:white;
+  text-decoration:none;
   cursor:pointer;
+  transition:.3s;
 }
-.sidebar a:hover{
-  background:#6366f1;
-}
+.sidebar a:hover{background:#6366f1}
 
 /* MAIN */
 .main{
   flex:1;
   padding:40px;
 }
+
+.section{display:none}
+.section.active{display:block}
 
 /* STATS */
 .stats{
@@ -56,19 +58,106 @@ body{
   padding:20px;
   border-radius:10px;
 }
-.card h3{
-  margin:0 0 10px;
-}
 .big{
   font-size:24px;
   font-weight:700;
 }
 
-/* SECTIONS */
-.section{display:none;}
-.section.active{display:block;}
+/* UPLOAD CARD */
+.upload-wrapper{
+  display:flex;
+  justify-content:center;
+  margin-top:30px;
+}
+.upload-card{
+  width:450px;
+  background:rgba(255,255,255,.05);
+  backdrop-filter:blur(20px);
+  padding:35px;
+  border-radius:20px;
+  box-shadow:0 30px 60px rgba(0,0,0,.4);
+  animation:fadeInUp .6s ease;
+  transition:.4s;
+}
+.upload-card:hover{transform:translateY(-10px)}
 
-/* COURSE */
+.upload-card h2{margin-bottom:20px}
+
+.input-group{
+  position:relative;
+  margin-bottom:18px;
+}
+.input-group input,
+.input-group textarea{
+  width:100%;
+  padding:12px;
+  background:#1f2937;
+  border:none;
+  border-radius:8px;
+  color:white;
+}
+.input-group label{
+  position:absolute;
+  left:12px;
+  top:12px;
+  opacity:.7;
+  transition:.3s;
+}
+.input-group input:focus + label,
+.input-group input:valid + label,
+.input-group textarea:focus + label,
+.input-group textarea:valid + label{
+  top:-10px;
+  left:8px;
+  font-size:12px;
+  background:#0f172a;
+  padding:0 4px;
+  color:#6366f1;
+}
+
+.file-group{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.file-group button{
+  padding:10px 14px;
+  border:none;
+  background:#6366f1;
+  border-radius:8px;
+  color:white;
+  cursor:pointer;
+}
+#fileName{font-size:13px; opacity:.7}
+
+.upload-btn{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:linear-gradient(90deg,#6366f1,#22c55e);
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+  transition:.3s;
+}
+.upload-btn:hover{transform:scale(1.05)}
+
+.upload-progress{
+  height:6px;
+  background:#1f2937;
+  border-radius:6px;
+  overflow:hidden;
+  margin-top:10px;
+}
+.upload-bar{
+  height:100%;
+  width:0%;
+  background:#22c55e;
+  transition:.3s;
+}
+
+/* COURSES */
 .course-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -85,24 +174,11 @@ body{
   height:140px;
   object-fit:cover;
 }
-.course-card div{
-  padding:15px;
-}
+.course-card div{padding:15px}
 
-input, textarea{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
-  border-radius:6px;
-  border:none;
-}
-button{
-  padding:10px 15px;
-  background:#6366f1;
-  border:none;
-  color:white;
-  border-radius:6px;
-  cursor:pointer;
+@keyframes fadeInUp{
+  from{opacity:0; transform:translateY(30px)}
+  to{opacity:1; transform:translateY(0)}
 }
 </style>
 </head>
@@ -116,22 +192,22 @@ button{
 
 <div class="main">
 
-<!-- ANALYSIS SECTION -->
+<!-- ANALYSIS -->
 <div id="analysis" class="section active">
 
 <h2>Admin Analysis</h2>
 
 <div class="stats">
   <div class="card">
-    <h3>Total Revenue</h3>
+    <div>Total Revenue</div>
     <div id="totalRevenue" class="big">₹0</div>
   </div>
   <div class="card">
-    <h3>Earnings</h3>
+    <div>Earnings</div>
     <div id="teacherRevenue" class="big">₹0</div>
   </div>
   <div class="card">
-    <h3>Available</h3>
+    <div>Available</div>
     <div id="availableBalance" class="big">₹0</div>
   </div>
 </div>
@@ -141,16 +217,45 @@ button{
 </div>
 
 
-<!-- COURSES SECTION -->
+<!-- COURSES -->
 <div id="courses" class="section">
 
-<h2>Upload Course</h2>
+<div class="upload-wrapper">
+  <div class="upload-card">
+    <h2>🚀 Create Course</h2>
 
-<input type="text" id="courseTitle" placeholder="Course Title">
-<input type="number" id="coursePrice" placeholder="Course Price">
-<input type="file" id="courseImage">
-<textarea id="courseDesc" placeholder="Course Description"></textarea>
-<button onclick="uploadCourse()">Upload Course</button>
+    <div class="input-group">
+      <input type="text" id="courseTitle" required>
+      <label>Course Title</label>
+    </div>
+
+    <div class="input-group">
+      <input type="number" id="coursePrice" required>
+      <label>Course Price</label>
+    </div>
+
+    <div class="input-group file-group">
+      <input type="file" id="courseImage" hidden>
+      <button type="button" onclick="document.getElementById('courseImage').click()">
+        Choose Thumbnail
+      </button>
+      <span id="fileName">No file selected</span>
+    </div>
+
+    <div class="input-group">
+      <textarea id="courseDesc" rows="3" required></textarea>
+      <label>Description</label>
+    </div>
+
+    <div class="upload-progress">
+      <div class="upload-bar" id="uploadBar"></div>
+    </div>
+
+    <button onclick="uploadCourse()" class="upload-btn">
+      Publish Course
+    </button>
+  </div>
+</div>
 
 <div class="course-grid" id="courseGrid"></div>
 
@@ -169,16 +274,16 @@ import { getAuth, onAuthStateChanged } from
 import { getFirestore, collection, addDoc, query, where, onSnapshot }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-import { getStorage, ref, uploadBytes, getDownloadURL }
+import { getStorage, ref, uploadBytesResumable, getDownloadURL }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
-  authDomain: "login-65d4b.firebaseapp.com",
-  projectId: "login-65d4b",
-  storageBucket: "login-65d4b.appspot.com",
-  messagingSenderId: "239979806578",
-  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_BUCKET.appspot.com",
+  messagingSenderId: "YOUR_MSG_ID",
+  appId: "YOUR_APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -186,14 +291,20 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
+/* Switch */
 window.switchSection = function(id){
-  document.querySelectorAll(".section").forEach(sec=>sec.classList.remove("active"));
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
 
-/* Chart Setup */
-const ctx=document.getElementById("revenueChart");
-const chart=new Chart(ctx,{
+/* File name display */
+document.getElementById("courseImage").addEventListener("change", function(){
+  document.getElementById("fileName").innerText =
+    this.files[0]?.name || "No file selected";
+});
+
+/* Chart */
+const chart = new Chart(document.getElementById("revenueChart"),{
   type:'line',
   data:{
     labels:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
@@ -201,7 +312,7 @@ const chart=new Chart(ctx,{
   }
 });
 
-/* Analysis Logic */
+/* Auth */
 onAuthStateChanged(auth,(user)=>{
   if(!user) return;
 
@@ -227,7 +338,6 @@ onAuthStateChanged(auth,(user)=>{
   });
 
   const cq=query(collection(db,"courses"),where("creatorId","==",user.uid));
-
   onSnapshot(cq,(snap)=>{
     const grid=document.getElementById("courseGrid");
     grid.innerHTML="";
@@ -243,11 +353,10 @@ onAuthStateChanged(auth,(user)=>{
         </div>`;
     });
   });
-
 });
 
 /* Upload */
-window.uploadCourse = async function(){
+window.uploadCourse = function(){
 
   const title=document.getElementById("courseTitle").value;
   const price=document.getElementById("coursePrice").value;
@@ -256,20 +365,27 @@ window.uploadCourse = async function(){
 
   if(!title||!price||!file) return alert("Fill fields");
 
-  const storageRef=ref(storage,"courses/"+file.name);
-  await uploadBytes(storageRef,file);
-  const url=await getDownloadURL(storageRef);
+  const storageRef=ref(storage,'courses/'+Date.now()+"_"+file.name);
+  const uploadTask=uploadBytesResumable(storageRef,file);
 
-  await addDoc(collection(db,"courses"),{
-    title,
-    price:Number(price),
-    thumbnail:url,
-    description:desc,
-    creatorId:auth.currentUser.uid,
-    createdAt:new Date()
+  uploadTask.on('state_changed',(snapshot)=>{
+    const progress=(snapshot.bytesTransferred/snapshot.totalBytes)*100;
+    document.getElementById("uploadBar").style.width=progress+"%";
+  },null,async()=>{
+    const url=await getDownloadURL(uploadTask.snapshot.ref);
+
+    await addDoc(collection(db,"courses"),{
+      title,
+      price:Number(price),
+      thumbnail:url,
+      description:desc,
+      creatorId:auth.currentUser.uid,
+      createdAt:new Date()
+    });
+
+    document.getElementById("uploadBar").style.width="0%";
+    alert("Course Published 🚀");
   });
-
-  alert("Course Uploaded");
 };
 
 </script>
