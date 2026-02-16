@@ -75,7 +75,12 @@ from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getFirestore,
   doc,
-  getDoc
+  getDoc,
+  updateDoc,
+  collection,
+  query,
+  where,
+  getDocs
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -94,50 +99,87 @@ const db = getFirestore(app);
 
 const error = document.getElementById("error");
 
-/* SECURE LOGIN */
-document.getElementById("loginForm")
-.addEventListener("submit", async (e)=>{
+document.getElementById("loginForm").addEventListener("submit", async (e)=>{
   e.preventDefault();
   error.innerText="";
 
   const selectedRole =
     document.querySelector('input[name="role"]:checked').value;
 
+  const emailValue = document.getElementById("email").value.trim();
+  const passwordValue = document.getElementById("password").value;
+
   try{
 
-    // 1. Sign in
     const userCred = await signInWithEmailAndPassword(
-      auth,
-      document.getElementById("email").value.trim(),
-      document.getElementById("password").value
+      auth,emailValue,passwordValue
     );
 
     const user = userCred.user;
-
-    // 2. Get role from Firestore
-    const userSnap = await getDoc(doc(db,"users",user.uid));
+    const userRef = doc(db,"users",user.uid);
+    const userSnap = await getDoc(userRef);
 
     if(!userSnap.exists()){
-      error.innerText="Account not properly registered.";
+      error.innerText="User record missing.";
       await signOut(auth);
       return;
     }
 
-    const savedRole = userSnap.data().role;
+    const data = userSnap.data();
 
-    // 3. Check role match
-    if(savedRole !== selectedRole){
-      error.innerText =
-        "Access denied. This account is registered as " + savedRole + ".";
+    // Account lock check
+    if(data.locked === true){
+      error.innerText="Account locked. Contact admin.";
       await signOut(auth);
       return;
     }
 
-    // 4. Login success
-    window.location.replace("dashboard.html");
+    // Role mismatch
+    if(data.role !== selectedRole){
+      error.innerText="Registered as "+data.role;
+      await signOut(auth);
+      return;
+    }
+
+    // Reset failed attempts
+    await updateDoc(userRef,{ failedAttempts:0 });
+
+    // Teacher approval check
+    if(data.role === "teacher"){
+      if(data.approved !== true){
+        error.innerText="Waiting for admin approval.";
+        await signOut(auth);
+        return;
+      }
+      window.location.replace("teacher-dashboard.html");
+    } else {
+      window.location.replace("dashboard.html");
+    }
 
   }catch(err){
-    error.innerText=err.message;
+
+    const q = query(collection(db,"users"),where("email","==",emailValue));
+    const snap = await getDocs(q);
+
+    snap.forEach(async (docSnap)=>{
+      const userRef = doc(db,"users",docSnap.id);
+      const data = docSnap.data();
+      const attempts = (data.failedAttempts || 0) + 1;
+
+      if(attempts >= 3){
+        await updateDoc(userRef,{
+          failedAttempts:attempts,
+          locked:true
+        });
+        error.innerText="Account locked after 3 failed attempts.";
+      }else{
+        await updateDoc(userRef,{
+          failedAttempts:attempts
+        });
+        error.innerText="Invalid credentials.";
+      }
+    });
+
   }
 
 });
@@ -146,3 +188,4 @@ document.getElementById("loginForm")
 
 </body>
 </html>
+
