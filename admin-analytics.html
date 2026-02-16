@@ -155,13 +155,20 @@ body{
 
   <div class="stat-card">
     <div class="stat-number" id="teacherRevenue">₹0</div>
-    <div>Your Earnings (80%)</div>
+    <div>Total Earnings (80%)</div>
   </div>
 
   <div class="stat-card">
     <div class="stat-number" id="companyRevenue">₹0</div>
     <div>Platform Share (20%)</div>
   </div>
+
+  <!-- NEW AVAILABLE BALANCE -->
+  <div class="stat-card">
+    <div class="stat-number" id="availableBalance">₹0</div>
+    <div>Available Balance</div>
+  </div>
+
 </div>
 
 <h3>💸 Withdraw Earnings</h3><br>
@@ -197,6 +204,9 @@ body{
 <br>
 <div id="withdrawStatus"></div>
 
+<h3>📜 Withdraw History</h3><br>
+<div id="withdrawHistory"></div>
+
 <h3>Your Courses</h3><br>
 <div id="courseContainer" class="course-grid"></div>
 
@@ -206,10 +216,8 @@ body{
 
 import { initializeApp } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-
 import { getAuth, onAuthStateChanged }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
 import {
   getFirestore,
   doc,
@@ -223,67 +231,33 @@ import {
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
-  authDomain: "login-65d4b.firebaseapp.com",
-  projectId: "login-65d4b",
-  storageBucket: "login-65d4b.appspot.com",
-  messagingSenderId: "239979806578",
-  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
-};
+const firebaseConfig = { YOUR_CONFIG_HERE };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentBalance = 0;
-let authChecked = false;
 
 onAuthStateChanged(auth, async (user)=>{
-
-  if(authChecked) return;
-  authChecked = true;
-
   if(!user){
-    setTimeout(()=>{
-      if(!auth.currentUser){
-        window.location = "login.html";
-      }
-    },1000);
+    window.location="login.html";
     return;
   }
 
-  try{
-    const snap = await getDoc(doc(db,"users",user.uid));
-
-    if(snap.exists()){
-      const role = snap.data().role;
-      if(role && role !== "teacher"){
-        window.location="dashboard.html";
-        return;
-      }
-    }
-
-    loadCourses(user.uid);
-    loadRevenue(user.uid);
-
-  }catch(error){
-    console.error(error);
-    loadCourses(user.uid);
-    loadRevenue(user.uid);
-  }
-
+  loadCourses(user.uid);
+  loadRevenue(user.uid);
+  loadWithdrawHistory(user.uid);
 });
 
+/* LOAD COURSES (UNCHANGED) */
 async function loadCourses(uid){
-
   const q = query(collection(db,"courses"), where("creatorId","==",uid));
   const snapshot = await getDocs(q);
 
-  const container = document.getElementById("courseContainer");
-  container.innerHTML = "";
-
   let totalCourses = 0;
+  const container = document.getElementById("courseContainer");
+  container.innerHTML="";
 
   snapshot.forEach(docSnap=>{
     totalCourses++;
@@ -293,9 +267,7 @@ async function loadCourses(uid){
       <div class="course-card">
         <h3>${course.title}</h3>
         <p>₹ ${course.price}</p>
-        <button class="delete-btn" onclick="deleteCourse('${docSnap.id}')">
-          Delete
-        </button>
+        <button class="delete-btn" onclick="deleteCourse('${docSnap.id}')">Delete</button>
       </div>
     `;
   });
@@ -303,71 +275,89 @@ async function loadCourses(uid){
   document.getElementById("totalCourses").innerText = totalCourses;
 }
 
+/* REVENUE + AVAILABLE BALANCE */
 async function loadRevenue(uid){
 
-  const q = query(collection(db,"purchases"), where("teacherId","==",uid));
-  const snapshot = await getDocs(q);
+  const purchaseSnap = await getDocs(
+    query(collection(db,"purchases"), where("teacherId","==",uid))
+  );
 
-  let totalRevenue = 0;
-  let teacherRevenue = 0;
-  let companyRevenue = 0;
+  let totalRevenue=0, teacherRevenue=0, companyRevenue=0;
 
-  snapshot.forEach(docSnap=>{
-    const data = docSnap.data();
-    totalRevenue += data.amount;
-    teacherRevenue += data.teacherRevenue;
-    companyRevenue += data.platformRevenue;
+  purchaseSnap.forEach(docSnap=>{
+    const data=docSnap.data();
+    totalRevenue+=data.amount;
+    teacherRevenue+=data.teacherRevenue;
+    companyRevenue+=data.platformRevenue;
   });
 
-  currentBalance = teacherRevenue;
+  const withdrawSnap = await getDocs(
+    query(collection(db,"withdrawRequests"),
+      where("teacherId","==",uid),
+      where("status","in",["pending","processing"])
+    )
+  );
 
-  document.getElementById("totalRevenue").innerText = "₹"+totalRevenue;
-  document.getElementById("teacherRevenue").innerText = "₹"+teacherRevenue;
-  document.getElementById("companyRevenue").innerText = "₹"+companyRevenue;
+  let pendingAmount=0;
+  withdrawSnap.forEach(docSnap=>{
+    pendingAmount+=docSnap.data().amount;
+  });
+
+  currentBalance=teacherRevenue-pendingAmount;
+
+  document.getElementById("totalRevenue").innerText="₹"+totalRevenue;
+  document.getElementById("teacherRevenue").innerText="₹"+teacherRevenue;
+  document.getElementById("companyRevenue").innerText="₹"+companyRevenue;
+  document.getElementById("availableBalance").innerText="₹"+currentBalance;
 }
 
-window.deleteCourse = async function(id){
-  if(!confirm("Delete this course?")) return;
-  await deleteDoc(doc(db,"courses",id));
-  location.reload();
-};
+/* WITHDRAW HISTORY */
+async function loadWithdrawHistory(uid){
 
+  const snapshot = await getDocs(
+    query(collection(db,"withdrawRequests"), where("teacherId","==",uid))
+  );
+
+  const container=document.getElementById("withdrawHistory");
+  container.innerHTML="";
+
+  snapshot.forEach(docSnap=>{
+    const data=docSnap.data();
+
+    container.innerHTML+=`
+      <div class="stat-card" style="margin-bottom:15px;">
+        <strong>₹${data.amount}</strong><br>
+        Status: ${data.status}<br>
+        Type: ${data.type}
+      </div>
+    `;
+  });
+}
+
+/* WITHDRAW ACTION */
 document.getElementById("withdrawBtn").addEventListener("click", async ()=>{
 
-  const user = auth.currentUser;
-  const amount = Number(document.getElementById("withdrawAmount").value);
-  const type = document.querySelector('input[name="withdrawType"]:checked').value;
+  const user=auth.currentUser;
+  const amount=Number(document.getElementById("withdrawAmount").value);
+  const type=document.querySelector('input[name="withdrawType"]:checked').value;
 
-  if(!amount || amount <= 0){
-    alert("Enter valid amount");
-    return;
-  }
-
-  if(amount < 100){
-    alert("Minimum withdraw amount is ₹100");
-    return;
-  }
-
-  if(amount > currentBalance){
-    alert("Insufficient balance");
-    return;
-  }
+  if(amount<100){ alert("Minimum ₹100 required"); return; }
+  if(amount>currentBalance){ alert("Insufficient balance"); return; }
 
   await addDoc(collection(db,"withdrawRequests"),{
-    teacherId: user.uid,
-    amount: amount,
-    type: type,
-    status: type === "automatic" ? "processing" : "pending",
-    createdAt: new Date()
+    teacherId:user.uid,
+    amount:amount,
+    type:type,
+    status:type==="automatic"?"processing":"pending",
+    createdAt:new Date()
   });
 
-  currentBalance -= amount;
-  document.getElementById("teacherRevenue").innerText = "₹"+currentBalance;
-
-  document.getElementById("withdrawStatus").innerHTML =
-    "<p style='color:#22c55e;'>Withdraw Request Sent ✅ ("+type+")</p>";
-
   document.getElementById("withdrawAmount").value="";
+  loadRevenue(user.uid);
+  loadWithdrawHistory(user.uid);
+
+  document.getElementById("withdrawStatus").innerHTML=
+  "<p style='color:#22c55e;'>Request Sent ✅</p>";
 });
 
 </script>
