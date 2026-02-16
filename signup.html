@@ -3,121 +3,69 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sign Up | Adhyayana</title>
+<title>Signup | Adhyayana</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
-body{
-  height:100vh;
-  background:#05070d;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-}
-.card{
-  width:380px;
-  background:#0d1117;
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:20px;
-  padding:40px;
-  text-align:center;
-}
-input{
-  width:100%;
-  padding:14px;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,0.08);
-  background:#0b0f14;
-  color:#fff;
-  margin-bottom:15px;
-}
-button{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:10px;
-  background:#1f6feb;
-  color:white;
-}
-.link{margin-top:15px;}
-.link a{color:#4f8cff;text-decoration:none;}
-</style>
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 
-<body>
+<body class="auth-body">
 
-<div class="card">
+<div class="auth-wrapper">
 
-<h2>Create Account</h2>
+  <div class="auth-logo">
+    <img src="logo.png" alt="Adhyayana Logo">
+    <h2>ADHYAYANA</h2>
+  </div>
 
-<form id="signupForm">
-<input type="email" id="email" placeholder="Email" required>
-<input type="password" id="password" placeholder="Password" required>
-<button type="submit">Create Account</button>
-</form>
+  <div class="auth-card auth-animate login-card">
 
-<div class="link">
-<a href="login.html">Back to Login</a>
+    <h3>Create Account 🚀</h3>
+    <p class="auth-sub">Join and start learning & earning</p>
+
+    <form class="signup-form">
+
+      <input type="text" id="signupName" placeholder="Full Name" required>
+
+      <input type="email" id="signupEmail" placeholder="Email Address" required>
+
+      <div class="password-field">
+        <input type="password" id="signupPassword" placeholder="Password" required>
+        <span class="toggle-password" id="toggleSignupPassword">👁</span>
+      </div>
+
+      <!-- ROLE -->
+      <select id="signupRole" required>
+        <option value="student">Student</option>
+        <option value="teacher">Teacher</option>
+      </select>
+
+      <button class="btn primary full" type="submit">
+        Create Account
+      </button>
+
+    </form>
+
+    <div class="divider">OR</div>
+
+    <button id="googleSignup" class="google-btn" type="button">
+      <img src="images/google.png" alt="Google">
+      <span>Continue with Google</span>
+    </button>
+
+    <div class="auth-footer">
+      <p class="auth-switch">
+        Already have an account?
+        <a href="login.html">Login</a>
+      </p>
+      <a href="index.html" class="back-home">← Back to Home</a>
+    </div>
+
+  </div>
 </div>
 
-<p id="error"></p>
-
-</div>
-
-<script type="module">
-
-import { initializeApp } from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-
-import {
-  getAuth,
-  createUserWithEmailAndPassword
-}
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  serverTimestamp
-}
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
-  authDomain: "login-65d4b.firebaseapp.com",
-  projectId: "login-65d4b",
-  storageBucket: "login-65d4b.appspot.com",
-  messagingSenderId: "239979806578",
-  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-signupForm.addEventListener("submit", async(e)=>{
-  e.preventDefault();
-  try{
-    const cred = await createUserWithEmailAndPassword(auth,email.value,password.value);
-
-    await setDoc(doc(db,"users",cred.user.uid),{
-      email: email.value,
-      role: "student",
-      createdAt: serverTimestamp()
-    });
-
-    window.location.replace("dashboard.html");
-
-  }catch(err){
-    error.innerText = err.message;
-  }
-});
-
-</script>
+<script type="module" src="js/signup-auth.js"></script>
+<script src="js/password-toggle.js"></script>
 
 </body>
 </html>
