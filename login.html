@@ -29,7 +29,7 @@
 <label><input type="radio" name="role" value="teacher"> Teacher</label>
 </div>
 
-<input type="email" id="email" placeholder="Email" required>
+<input type="email" id="email" placeholder="Email Address" required>
 <input type="password" id="password" placeholder="Password" required>
 
 <button class="btn primary full" type="submit">
@@ -45,7 +45,7 @@ Continue with Google
 </button>
 
 <p class="auth-switch">
-No account?
+Don't have account?
 <a href="signup.html">Signup</a>
 </p>
 
@@ -72,6 +72,7 @@ import {
 getFirestore,
 doc,
 getDoc,
+setDoc,
 updateDoc
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -88,10 +89,9 @@ appId:"1:239979806578:web:65db25b7e975ef0f1867eb"
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
 const error = document.getElementById("error");
 
-// Email login
+/* EMAIL LOGIN */
 loginForm.addEventListener("submit", async (e)=>{
 e.preventDefault();
 error.innerText="";
@@ -100,20 +100,20 @@ const role =
 document.querySelector('input[name="role"]:checked').value;
 
 try{
-
 const userCred = await signInWithEmailAndPassword(
-auth,email.value.trim(),password.value
+auth,
+email.value.trim(),
+password.value
 );
 
-await handleLogin(userCred.user,role);
+await handleLogin(userCred.user, role);
 
 }catch(err){
 error.innerText=err.message;
 }
-
 });
 
-// Google login
+/* GOOGLE LOGIN */
 const provider = new GoogleAuthProvider();
 
 googleLogin.addEventListener("click", async ()=>{
@@ -122,48 +122,65 @@ const role =
 document.querySelector('input[name="role"]:checked').value;
 
 try{
-
 const result = await signInWithPopup(auth,provider);
-await handleLogin(result.user,role);
-
+await handleLogin(result.user, role);
 }catch(err){
 error.innerText=err.message;
 }
 });
 
-async function handleLogin(user,selectedRole){
+/* MAIN LOGIN LOGIC */
+async function handleLogin(user, selectedRole){
 
-const snap = await getDoc(doc(db,"users",user.uid));
+const userRef = doc(db,"users",user.uid);
+const snap = await getDoc(userRef);
 
+/* 🔥 FIX: If user data missing → auto create */
 if(!snap.exists()){
-error.innerText="User data missing.";
-await signOut(auth);
+
+await setDoc(userRef,{
+name:user.displayName || "User",
+email:user.email,
+role:selectedRole,
+approved:selectedRole==="teacher" ? false : true,
+failedAttempts:0,
+locked:false,
+createdAt:new Date()
+});
+
+window.location.replace(
+selectedRole==="teacher"
+? "teacher-dashboard.html"
+: "dashboard.html"
+);
 return;
 }
 
 const data = snap.data();
 
+/* LOCK CHECK */
 if(data.locked === true){
 error.innerText="Account locked.";
 await signOut(auth);
 return;
 }
 
+/* ROLE CHECK */
 if(data.role !== selectedRole){
 error.innerText="Registered as "+data.role;
 await signOut(auth);
 return;
 }
 
+/* TEACHER APPROVAL */
 if(data.role==="teacher" && data.approved!==true){
 error.innerText="Waiting for admin approval.";
 await signOut(auth);
 return;
 }
 
-await updateDoc(doc(db,"users",user.uid),{
-failedAttempts:0
-});
+/* RESET FAILED ATTEMPTS */
+await updateDoc(userRef,{ failedAttempts:0 });
 
 window.location.replace(
 data.role==="teacher"
