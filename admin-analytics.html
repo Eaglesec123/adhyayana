@@ -103,8 +103,6 @@ body{
   margin-bottom:10px;
 }
 
-/* COURSE GRID */
-
 .course-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
@@ -132,7 +130,6 @@ body{
   color:white;
   cursor:pointer;
 }
-
 </style>
 </head>
 
@@ -140,7 +137,6 @@ body{
 
 <div class="sidebar">
   <div class="logo">👨‍🏫 Teacher Panel</div>
-
   <a href="admin-analytics.html" class="nav-link">Dashboard</a>
   <a href="profile.html" class="nav-link">Profile</a>
 
@@ -151,33 +147,48 @@ body{
 
 <div class="main">
 
-  <h2>📊 Revenue Analytics</h2><br>
+<h2>📊 Revenue Analytics</h2><br>
 
-  <div class="stats">
-    <div class="stat-card">
-      <div class="stat-number" id="totalCourses">0</div>
-      <div>Total Courses</div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-number" id="totalRevenue">₹0</div>
-      <div>Total Course Value</div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-number" id="teacherRevenue">₹0</div>
-      <div>Your Earnings (80%)</div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-number" id="companyRevenue">₹0</div>
-      <div>Platform Share (20%)</div>
-    </div>
+<div class="stats">
+  <div class="stat-card">
+    <div class="stat-number" id="totalCourses">0</div>
+    <div>Total Courses</div>
   </div>
 
-  <h3>Your Courses</h3><br>
+  <div class="stat-card">
+    <div class="stat-number" id="totalRevenue">₹0</div>
+    <div>Total Course Value</div>
+  </div>
 
-  <div id="courseContainer" class="course-grid"></div>
+  <div class="stat-card">
+    <div class="stat-number" id="teacherRevenue">₹0</div>
+    <div>Your Earnings (80%)</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-number" id="companyRevenue">₹0</div>
+    <div>Platform Share (20%)</div>
+  </div>
+</div>
+
+<!-- WITHDRAW SECTION -->
+<h3>💸 Withdraw Earnings</h3><br>
+
+<div class="stat-card" style="max-width:400px;">
+  <input type="number" id="withdrawAmount" placeholder="Enter amount"
+    style="width:100%;padding:10px;border-radius:10px;border:none;margin-bottom:15px;">
+
+  <button id="withdrawBtn"
+    style="padding:10px;width:100%;border:none;border-radius:10px;background:linear-gradient(90deg,#f59e0b,#d97706);color:white;font-weight:600;cursor:pointer;">
+    Withdraw Now
+  </button>
+</div>
+
+<br>
+<div id="withdrawStatus"></div>
+
+<h3>Your Courses</h3><br>
+<div id="courseContainer" class="course-grid"></div>
 
 </div>
 
@@ -197,12 +208,13 @@ import {
   query,
   where,
   getDocs,
-  deleteDoc
+  deleteDoc,
+  addDoc
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
+  apiKey: "YOUR_KEY",
   authDomain: "login-65d4b.firebaseapp.com",
   projectId: "login-65d4b",
   storageBucket: "login-65d4b.appspot.com",
@@ -214,7 +226,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* ===== AUTH CHECK ===== */
+let currentBalance = 0;
 
 onAuthStateChanged(auth, async (user)=>{
 
@@ -232,10 +244,7 @@ onAuthStateChanged(auth, async (user)=>{
 
   loadCourses(user.uid);
   loadRevenue(user.uid);
-
 });
-
-/* ===== LOAD COURSES (UNCHANGED) ===== */
 
 async function loadCourses(uid){
 
@@ -248,7 +257,6 @@ async function loadCourses(uid){
   let totalCourses = 0;
 
   snapshot.forEach(docSnap=>{
-
     totalCourses++;
 
     const course = docSnap.data();
@@ -267,15 +275,9 @@ async function loadCourses(uid){
   document.getElementById("totalCourses").innerText = totalCourses;
 }
 
-/* ===== REAL REVENUE FROM PURCHASES ===== */
-
 async function loadRevenue(uid){
 
-  const q = query(
-    collection(db,"purchases"),
-    where("teacherId","==",uid)
-  );
-
+  const q = query(collection(db,"purchases"), where("teacherId","==",uid));
   const snapshot = await getDocs(q);
 
   let totalRevenue = 0;
@@ -284,28 +286,58 @@ async function loadRevenue(uid){
 
   snapshot.forEach(docSnap=>{
     const data = docSnap.data();
-
     totalRevenue += data.amount;
     teacherRevenue += data.teacherRevenue;
     companyRevenue += data.platformRevenue;
   });
+
+  currentBalance = teacherRevenue;
 
   document.getElementById("totalRevenue").innerText = "₹"+totalRevenue;
   document.getElementById("teacherRevenue").innerText = "₹"+teacherRevenue;
   document.getElementById("companyRevenue").innerText = "₹"+companyRevenue;
 }
 
-/* ===== DELETE COURSE ===== */
-
 window.deleteCourse = async function(id){
   if(!confirm("Delete this course?")) return;
   await deleteDoc(doc(db,"courses",id));
   location.reload();
-}
+};
+
+/* WITHDRAW SYSTEM */
+
+document.getElementById("withdrawBtn").addEventListener("click", async ()=>{
+
+  const user = auth.currentUser;
+  const amount = Number(document.getElementById("withdrawAmount").value);
+
+  if(!amount || amount <= 0){
+    alert("Enter valid amount");
+    return;
+  }
+
+  if(amount > currentBalance){
+    alert("Insufficient balance");
+    return;
+  }
+
+  await addDoc(collection(db,"withdrawRequests"),{
+    teacherId: user.uid,
+    amount: amount,
+    status: "pending",
+    createdAt: new Date()
+  });
+
+  currentBalance -= amount;
+  document.getElementById("teacherRevenue").innerText = "₹"+currentBalance;
+
+  document.getElementById("withdrawStatus").innerHTML =
+    "<p style='color:#22c55e;'>Withdraw Request Sent ✅</p>";
+
+  document.getElementById("withdrawAmount").value="";
+});
 
 </script>
 
-
 </body>
 </html>
-
