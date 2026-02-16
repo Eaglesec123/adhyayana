@@ -1,18 +1,17 @@
 import { initializeApp } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
-import {
+import { 
   getAuth,
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
-  signOut,
   setPersistence,
-  browserLocalPersistence   // ✅ CHANGED HERE
+  browserLocalPersistence
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-import {
+import { 
   getFirestore,
   doc,
   getDoc
@@ -20,9 +19,7 @@ import {
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
-/* =========================
-   FIREBASE CONFIG
-========================= */
+/* ================= FIREBASE CONFIG ================= */
 
 const firebaseConfig = {
   apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
@@ -37,110 +34,70 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* ✅ FIX: Persistent login across pages */
+/* ================= FORCE LOGIN PERSISTENCE ================= */
+
 await setPersistence(auth, browserLocalPersistence);
 
+/* ================= EMAIL LOGIN ================= */
+
 const form = document.getElementById("loginForm");
-const googleBtn = document.getElementById("googleLogin");
 const errorMessage = document.getElementById("errorMessage");
 
-
-/* =========================
-   EMAIL LOGIN
-========================= */
-
-form.addEventListener("submit", async (e)=>{
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  errorMessage.textContent = "";
-  localStorage.clear();   // ✅ use localStorage now
-
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const selectedRole = document.getElementById("loginRole").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const role = document.getElementById("loginRole").value;
 
   try {
 
-    const cred = await signInWithEmailAndPassword(auth,email,password);
-    const snap = await getDoc(doc(db,"users",cred.user.uid));
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-    if(!snap.exists()){
-      await signOut(auth);
-      errorMessage.textContent = "Account data not found.";
+    const user = userCredential.user;
+
+    // Check role from Firestore
+    const snap = await getDoc(doc(db, "users", user.uid));
+
+    if (!snap.exists()) {
+      errorMessage.innerText = "User data missing.";
       return;
     }
 
-    const realRole = snap.data().role;
+    const userData = snap.data();
 
-    if(realRole !== selectedRole){
-      await signOut(auth);
-      errorMessage.textContent =
-        "Access denied! This email is registered as " + realRole;
+    if (userData.role !== role) {
+      errorMessage.innerText = "Role mismatch!";
       return;
     }
 
-    /* ✅ SAVE ROLE PROPERLY */
-    localStorage.setItem("role", realRole);
-    localStorage.setItem("uid", cred.user.uid);
+    window.location = "dashboard.html";
 
-    if(realRole === "teacher"){
-      window.location.href = "admin-analytics.html";
-    } else {
-      window.location.href = "dashboard.html";
-    }
-
-  } catch(err){
-    errorMessage.textContent = err.message;
+  } catch (error) {
+    errorMessage.innerText = error.message;
   }
+
 });
 
 
-/* =========================
-   GOOGLE LOGIN
-========================= */
+/* ================= GOOGLE LOGIN ================= */
 
-googleBtn.addEventListener("click", async ()=>{
+const googleBtn = document.getElementById("googleLogin");
 
-  errorMessage.textContent = "";
-  localStorage.clear();
-
-  const selectedRole = document.getElementById("loginRole").value;
+googleBtn.addEventListener("click", async () => {
 
   try {
 
     const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth,provider);
-    const snap = await getDoc(doc(db,"users",result.user.uid));
 
-    if(!snap.exists()){
-      await signOut(auth);
-      errorMessage.textContent = "Account not registered. Please signup first.";
-      return;
-    }
+    const result = await signInWithPopup(auth, provider);
 
-    const realRole = snap.data().role;
+    const user = result.user;
 
-    if(realRole !== selectedRole){
-      await signOut(auth);
-      errorMessage.textContent =
-        "Access denied! This email is registered as " + realRole;
-      return;
-    }
+    window.location = "dashboard.html";
 
-    /* ✅ SAVE ROLE PROPERLY */
-    localStorage.setItem("role", realRole);
-    localStorage.setItem("uid", result.user.uid);
-
-    if(realRole === "teacher"){
-      window.location.href = "admin-analytics.html";
-    } else {
-      window.location.href = "dashboard.html";
-    }
-
-  } catch(err){
-    errorMessage.textContent = err.message;
+  } catch (error) {
+    errorMessage.innerText = error.message;
   }
 
 });
-
-
