@@ -1,7 +1,7 @@
-/* ===============================
-   3D Animated Premium Dashboard
-   Logic NOT touched
-=============================== */
+/* =========================
+   Dark Premium Dashboard
+   Logic Not Changed
+========================= */
 
 *{
   margin:0;
@@ -11,51 +11,11 @@
 }
 
 body{
+  background:#0f172a;
+  color:#e2e8f0;
   min-height:100vh;
-  background: radial-gradient(circle at 20% 20%, #667eea, #764ba2);
-  overflow:hidden;
-  color:white;
 }
 
-/* Floating background effect */
-body::before{
-  content:"";
-  position:absolute;
-  width:600px;
-  height:600px;
-  background:linear-gradient(45deg,#00c6ff,#0072ff);
-  border-radius:50%;
-  top:-200px;
-  left:-200px;
-  filter:blur(120px);
-  animation:float1 10s infinite alternate ease-in-out;
-  z-index:-1;
-}
-
-body::after{
-  content:"";
-  position:absolute;
-  width:500px;
-  height:500px;
-  background:linear-gradient(45deg,#ff4b2b,#ff416c);
-  border-radius:50%;
-  bottom:-200px;
-  right:-200px;
-  filter:blur(120px);
-  animation:float2 12s infinite alternate ease-in-out;
-  z-index:-1;
-}
-
-@keyframes float1{
-  from{transform:translateY(0);}
-  to{transform:translateY(80px);}
-}
-@keyframes float2{
-  from{transform:translateY(0);}
-  to{transform:translateY(-80px);}
-}
-
-/* Layout */
 .app{
   display:flex;
   height:100vh;
@@ -65,52 +25,57 @@ body::after{
 
 .sidebar{
   width:260px;
-  background:rgba(255,255,255,0.08);
-  backdrop-filter:blur(25px);
+  background:#111827;
   padding:25px;
   display:flex;
   flex-direction:column;
   justify-content:space-between;
-  border-right:1px solid rgba(255,255,255,0.1);
-  box-shadow:5px 0 25px rgba(0,0,0,0.2);
-  transform-style:preserve-3d;
+  border-right:1px solid #1f2937;
 }
 
-.brand{text-align:center;}
-.brand img{width:55px;margin-bottom:10px;}
-.brand h3{font-weight:800;letter-spacing:1px;}
+.brand{
+  text-align:center;
+}
+
+.brand img{
+  width:55px;
+  margin-bottom:10px;
+}
+
+.brand h3{
+  color:#f8fafc;
+  font-weight:700;
+}
 
 .sidebar nav a{
   display:block;
-  padding:14px;
+  padding:13px 15px;
   margin:8px 0;
-  color:white;
+  color:#9ca3af;
   text-decoration:none;
-  border-radius:12px;
-  transition:all .4s ease;
-  transform-style:preserve-3d;
+  border-radius:10px;
+  transition:0.3s ease;
 }
 
-.sidebar nav a:hover{
-  background:rgba(255,255,255,0.2);
-  transform:translateX(8px) rotateY(10deg);
+.sidebar nav a:hover,
+.sidebar nav a.active{
+  background:#1f2937;
+  color:#ffffff;
+  transform:translateX(6px);
 }
 
-/* Logout button 3D */
 .logout-btn{
   padding:12px;
   border:none;
-  border-radius:12px;
-  background:linear-gradient(90deg,#ff416c,#ff4b2b);
+  border-radius:10px;
+  background:#dc2626;
   color:white;
   cursor:pointer;
-  font-weight:600;
-  transition:.4s;
+  transition:0.3s;
 }
 
 .logout-btn:hover{
-  transform:translateY(-3px) scale(1.05);
-  box-shadow:0 10px 20px rgba(0,0,0,0.4);
+  background:#ef4444;
 }
 
 /* MAIN */
@@ -127,77 +92,75 @@ body::after{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:30px;
+  margin-bottom:35px;
 }
 
 .topbar input{
-  padding:12px 18px;
+  padding:10px 15px;
   border-radius:30px;
   border:none;
-  width:280px;
-  outline:none;
+  background:#1f2937;
+  color:white;
+  width:260px;
 }
 
-/* Profile 3D hover */
+.profile{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
 
 .profile img{
   width:45px;
   height:45px;
   border-radius:50%;
-  border:2px solid white;
-  transition:.5s;
+  border:2px solid #1f2937;
+  transition:0.4s;
 }
 
 .profile img:hover{
-  transform:rotateY(360deg);
+  transform:scale(1.1);
 }
 
-/* Stats Cards 3D */
+/* STATS CARDS */
 
 .stats{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:25px;
   margin-bottom:35px;
-  perspective:1200px;
 }
 
 .card{
-  background:rgba(255,255,255,0.1);
-  backdrop-filter:blur(20px);
+  background:#1e293b;
   padding:28px;
-  border-radius:18px;
-  transition:transform .6s ease, box-shadow .6s ease;
-  transform-style:preserve-3d;
+  border-radius:16px;
+  transition:0.4s;
+  border:1px solid #1f2937;
 }
 
 .card:hover{
-  transform:rotateY(15deg) rotateX(8deg) translateY(-10px);
-  box-shadow:0 25px 40px rgba(0,0,0,0.4);
+  transform:translateY(-8px);
+  box-shadow:0 20px 35px rgba(0,0,0,0.6);
 }
 
 .card.green{
-  background:linear-gradient(45deg,#00c853,#64dd17);
-  color:white;
+  background:#065f46;
 }
 
 .card h3{
-  font-size:30px;
+  font-size:28px;
   margin-bottom:5px;
+  color:white;
 }
 
-/* TABLE 3D effect */
+/* TABLE */
 
 .table-card{
-  background:rgba(255,255,255,0.1);
-  backdrop-filter:blur(20px);
+  background:#1e293b;
   padding:28px;
-  border-radius:18px;
-  transition:.4s;
-}
-
-.table-card:hover{
-  transform:scale(1.02);
+  border-radius:16px;
+  border:1px solid #1f2937;
 }
 
 table{
@@ -212,13 +175,14 @@ th,td{
 }
 
 th{
-  background:rgba(255,255,255,0.2);
+  background:#0f172a;
+  color:#94a3b8;
 }
 
 tr{
-  transition:.3s;
+  transition:0.3s;
 }
 
 tr:hover{
-  background:rgba(255,255,255,0.15);
+  background:#111827;
 }
