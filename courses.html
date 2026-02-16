@@ -1,72 +1,296 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Courses | Adhyayana</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<title>Adhyayana Courses</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
 <style>
+:root{
+  --bg:#0f172a;
+  --card:#1f2937;
+  --glass:rgba(255,255,255,0.05);
+  --primary:#6366f1;
+  --secondary:#22c55e;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+
 body{
-  font-family:Arial;
-  background:#f4f6f9;
+  background:linear-gradient(135deg,#0f172a,#111827);
+  color:#fff;
+  padding:40px;
 }
-.container{
-  width:90%;
-  margin:auto;
+
+/* HEADER */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:40px;
 }
-.card{
-  background:white;
-  padding:20px;
-  margin:20px 0;
+
+.upload-toggle{
+  background:linear-gradient(90deg,var(--primary),var(--secondary));
+  border:none;
+  padding:12px 20px;
   border-radius:12px;
+  color:white;
+  font-weight:600;
+  cursor:pointer;
 }
-.card img{
-  max-width:200px;
-  border-radius:10px;
+
+/* 3D UPLOAD CARD */
+.upload-card{
+  display:none;
+  perspective:1200px;
+  margin-bottom:50px;
 }
-video{
+
+.upload-inner{
+  background:var(--glass);
+  backdrop-filter:blur(20px);
+  padding:30px;
+  border-radius:25px;
+  transform-style:preserve-3d;
+  transition:transform .6s ease;
+  box-shadow:0 40px 80px rgba(0,0,0,.5);
+}
+
+.upload-card:hover .upload-inner{
+  transform:rotateY(10deg) rotateX(5deg);
+}
+
+.upload-inner input,
+.upload-inner textarea,
+.upload-inner select{
   width:100%;
+  margin:12px 0;
+  padding:12px;
+  border-radius:12px;
+  border:none;
+  background:#111827;
+  color:white;
+}
+
+.upload-btn{
+  margin-top:15px;
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(90deg,var(--primary),var(--secondary));
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.progress{
+  height:6px;
+  background:#111827;
+  border-radius:6px;
   margin-top:10px;
+  overflow:hidden;
+}
+
+.progress-bar{
+  height:100%;
+  width:0%;
+  background:#22c55e;
+  transition:.3s;
+}
+
+/* COURSE GRID */
+.course-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:30px;
+}
+
+.course-card{
+  background:var(--glass);
+  backdrop-filter:blur(20px);
+  border-radius:20px;
+  overflow:hidden;
+  transition:.4s ease;
+  box-shadow:0 25px 50px rgba(0,0,0,.4);
+}
+
+.course-card:hover{
+  transform:rotateY(8deg) scale(1.05);
+}
+
+.course-card img{
+  width:100%;
+  height:180px;
+  object-fit:cover;
+}
+
+.course-content{
+  padding:20px;
+}
+
+.price{
+  color:#22c55e;
+  font-weight:600;
+  margin:8px 0;
+}
+
+/* SUCCESS POPUP */
+.success{
+  position:fixed;
+  top:30px;
+  right:30px;
+  background:linear-gradient(90deg,#22c55e,#16a34a);
+  padding:15px 25px;
+  border-radius:12px;
+  display:none;
 }
 </style>
 </head>
+
 <body>
 
-<h1 style="text-align:center;">📚 ADHYAYANA Educational</h1>
-<div class="container" id="courseContainer"></div>
+<div class="header">
+  <h1>📚 My Courses</h1>
+  <button class="upload-toggle" onclick="toggleUpload()">+ Upload Course</button>
+</div>
 
-<script>
-const supabaseUrl = "YOUR_SUPABASE_URL";
-const supabaseKey = "YOUR_PUBLIC_ANON_KEY";
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+<div class="upload-card" id="uploadCard">
+  <div class="upload-inner">
+    <input type="text" id="courseTitle" placeholder="Course Name">
+    <input type="number" id="coursePrice" placeholder="Price ₹">
+    <input type="file" id="courseImage">
+    <select id="courseCategory">
+      <option>Programming</option>
+      <option>Design</option>
+      <option>Marketing</option>
+      <option>Business</option>
+    </select>
+    <textarea id="courseDesc" rows="4" placeholder="Description"></textarea>
 
-async function loadCourses(){
-  const { data } = await supabase
-    .from("courses")
-    .select("*")
-    .order("created_at", { ascending:false });
+    <button class="upload-btn" onclick="uploadCourse()">Publish Course</button>
 
-  const container=document.getElementById("courseContainer");
-  container.innerHTML="";
+    <div class="progress">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+  </div>
+</div>
 
-  data.forEach(course=>{
-    container.innerHTML+=`
-      <div class="card">
-        <h2>${course.title}</h2>
-        <p>${course.description}</p>
-        <p><b>Category:</b> ${course.category}</p>
-        ${course.thumbnail_url ? `<img src="${course.thumbnail_url}">` : ""}
-        <video controls>
-          <source src="${course.video_url}" type="video/mp4">
-        </video>
-        <h4>Topics:</h4>
-        ${course.topics ? course.topics.map(t=>`<div>- ${t}</div>`).join("") : ""}
-      </div>
-    `;
+<div class="course-grid" id="courseGrid"></div>
+<div class="success" id="successPopup">Course Uploaded Successfully 🚀</div>
+
+<script type="module">
+
+import { initializeApp } from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
+import { getAuth, onAuthStateChanged } from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import { getFirestore, collection, addDoc, query, where, onSnapshot } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+
+const firebaseConfig = {
+  YOUR_FIREBASE_CONFIG
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+
+/* Toggle Upload */
+window.toggleUpload = function(){
+  const card=document.getElementById("uploadCard");
+  card.style.display=card.style.display==="block"?"none":"block";
+};
+
+
+/* Upload Course */
+window.uploadCourse = async function(){
+
+  const title=document.getElementById("courseTitle").value;
+  const price=document.getElementById("coursePrice").value;
+  const file=document.getElementById("courseImage").files[0];
+  const category=document.getElementById("courseCategory").value;
+  const desc=document.getElementById("courseDesc").value;
+
+  if(!title || !price || !file){
+    return alert("Fill all fields");
+  }
+
+  const storageRef = ref(storage, 'courses/'+Date.now()+"_"+file.name);
+  const uploadTask = uploadBytesResumable(storageRef, file);
+
+  uploadTask.on('state_changed', (snapshot)=>{
+    const progress=(snapshot.bytesTransferred/snapshot.totalBytes)*100;
+    document.getElementById("progressBar").style.width=progress+"%";
+  },
+  (error)=>{ alert("Upload error"); },
+  async ()=>{
+    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+    await addDoc(collection(db,"courses"),{
+      title,
+      price:Number(price),
+      thumbnail:downloadURL,
+      category,
+      description:desc,
+      creatorId:auth.currentUser.uid,
+      createdAt:new Date()
+    });
+
+    document.getElementById("successPopup").style.display="block";
+    setTimeout(()=>{
+      document.getElementById("successPopup").style.display="none";
+    },2500);
   });
-}
 
-loadCourses();
+};
+
+
+/* Load Courses */
+onAuthStateChanged(auth,(user)=>{
+  if(!user){
+    window.location="login.html";
+    return;
+  }
+
+  const q=query(collection(db,"courses"),
+    where("creatorId","==",user.uid)
+  );
+
+  onSnapshot(q,(snap)=>{
+    const container=document.getElementById("courseGrid");
+    container.innerHTML="";
+
+    snap.forEach(doc=>{
+      const c=doc.data();
+      container.innerHTML+=`
+        <div class="course-card">
+          <img src="${c.thumbnail}">
+          <div class="course-content">
+            <h3>${c.title}</h3>
+            <div class="price">₹${c.price}</div>
+            <p>${c.category}</p>
+            <p>${c.description||''}</p>
+          </div>
+        </div>
+      `;
+    });
+
+  });
+});
+
 </script>
 
 </body>
 </html>
-
