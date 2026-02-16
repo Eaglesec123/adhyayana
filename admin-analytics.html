@@ -4,33 +4,28 @@
 <meta charset="UTF-8">
 <title>Admin Analytics | Adhyayana</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
-
 body{
   background:linear-gradient(135deg,#0f172a,#1e293b);
   color:white;
   display:flex;
   min-height:100vh;
 }
-
 .sidebar{
   width:250px;
   background:#111827;
   padding:30px 20px;
   box-shadow:5px 0 30px rgba(0,0,0,.6);
 }
-
 .logo{
   font-size:20px;
   font-weight:600;
   margin-bottom:40px;
   text-align:center;
 }
-
 .nav-link{
   display:block;
   padding:12px;
@@ -40,13 +35,11 @@ body{
   border-radius:12px;
   transition:.3s;
 }
-
 .nav-link:hover{
   background:#2563eb;
   color:white;
   transform:translateX(6px);
 }
-
 .upload-btn{
   margin-top:20px;
   padding:12px;
@@ -59,25 +52,21 @@ body{
   font-weight:600;
   transition:.3s;
 }
-
 .upload-btn:hover{
   transform:translateY(-4px);
   box-shadow:0 15px 30px rgba(34,197,94,.4);
 }
-
 .main{
   flex:1;
   padding:40px;
   overflow:auto;
 }
-
 .stats{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
   gap:25px;
   margin-bottom:40px;
 }
-
 .stat-card{
   background:rgba(30,41,59,.9);
   padding:25px;
@@ -86,34 +75,28 @@ body{
   box-shadow:0 30px 60px rgba(0,0,0,.6);
   transition:.4s;
 }
-
 .stat-card:hover{
   transform:translateY(-6px) scale(1.05);
 }
-
 .stat-number{
   font-size:28px;
   font-weight:700;
   margin-bottom:10px;
 }
-
 .course-grid{
-  display:grid;
+  display:none;
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
   gap:25px;
 }
-
 .course-card{
   background:#1e293b;
   padding:20px;
   border-radius:15px;
   transition:.3s;
 }
-
 .course-card:hover{
   transform:translateY(-6px);
 }
-
 .delete-btn{
   margin-top:10px;
   padding:8px;
@@ -163,204 +146,181 @@ body{
     <div>Platform Share (20%)</div>
   </div>
 
-  <!-- NEW AVAILABLE BALANCE -->
   <div class="stat-card">
     <div class="stat-number" id="availableBalance">₹0</div>
     <div>Available Balance</div>
   </div>
-
 </div>
 
 <h3>💸 Withdraw Earnings</h3><br>
 
 <div class="stat-card" style="max-width:400px;">
-
-  <input type="number" id="withdrawAmount" placeholder="Enter amount"
-    style="width:100%;padding:10px;border-radius:10px;border:none;margin-bottom:15px;">
-
-  <div style="margin-bottom:15px;text-align:left;">
-    <label>
-      <input type="radio" name="withdrawType" value="manual" checked>
-      Manual
-    </label>
-    &nbsp;&nbsp;
-    <label>
-      <input type="radio" name="withdrawType" value="automatic">
-      Automatic
-    </label>
-  </div>
-
-  <button id="withdrawBtn"
-    style="padding:10px;width:100%;border:none;border-radius:10px;background:linear-gradient(90deg,#f59e0b,#d97706);color:white;font-weight:600;cursor:pointer;">
-    Withdraw Now
-  </button>
-
-  <p style="font-size:12px;margin-top:10px;color:#94a3b8;">
-    Minimum Withdraw: ₹100
-  </p>
-
+<input type="number" id="withdrawAmount" placeholder="Enter amount"
+style="width:100%;padding:10px;border-radius:10px;border:none;margin-bottom:15px;">
+<div style="margin-bottom:15px;text-align:left;">
+<label><input type="radio" name="withdrawType" value="manual" checked> Manual</label>
+&nbsp;&nbsp;
+<label><input type="radio" name="withdrawType" value="automatic"> Automatic</label>
+</div>
+<button id="withdrawBtn"
+style="padding:10px;width:100%;border:none;border-radius:10px;background:linear-gradient(90deg,#f59e0b,#d97706);color:white;font-weight:600;cursor:pointer;">
+Withdraw Now
+</button>
+<p style="font-size:12px;margin-top:10px;color:#94a3b8;">Minimum Withdraw: ₹100</p>
 </div>
 
-<br>
-<div id="withdrawStatus"></div>
+<br><div id="withdrawStatus"></div>
 
-<h3>📜 Withdraw History</h3><br>
-<div id="withdrawHistory"></div>
+<h3>📜 Withdraw History 
+<button onclick="toggleWithdrawHistory()" style="margin-left:10px;padding:5px 10px;background:#2563eb;border:none;border-radius:8px;color:white;">Toggle</button>
+</h3><br>
+<div id="withdrawHistory" style="display:none;"></div>
 
-<h3>Your Courses</h3><br>
+<h3>Your Courses 
+<button onclick="toggleCourses()" style="margin-left:10px;padding:5px 10px;background:#2563eb;border:none;border-radius:8px;color:white;">Toggle</button>
+</h3><br>
 <div id="courseContainer" class="course-grid"></div>
 
 </div>
 
 <script type="module">
 
-import { initializeApp } from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged }
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-  deleteDoc,
-  addDoc
-} from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, query, where, getDocs, deleteDoc, addDoc, updateDoc }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const firebaseConfig = { YOUR_CONFIG_HERE };
+const firebaseConfig = { YOUR_FIREBASE_CONFIG };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentBalance = 0;
+let currentBalance=0;
 
-onAuthStateChanged(auth, async (user)=>{
-  if(!user){
-    window.location="login.html";
-    return;
-  }
-
-  loadCourses(user.uid);
-  loadRevenue(user.uid);
-  loadWithdrawHistory(user.uid);
+onAuthStateChanged(auth, async(user)=>{
+if(!user){ window.location="login.html"; return; }
+loadCourses(user.uid);
+loadRevenue(user.uid);
+loadWithdrawHistory(user.uid);
 });
 
-/* LOAD COURSES (UNCHANGED) */
 async function loadCourses(uid){
-  const q = query(collection(db,"courses"), where("creatorId","==",uid));
-  const snapshot = await getDocs(q);
+const q=query(collection(db,"courses"),where("creatorId","==",uid));
+const snapshot=await getDocs(q);
+const container=document.getElementById("courseContainer");
+container.innerHTML="";
+let totalCourses=0;
 
-  let totalCourses = 0;
-  const container = document.getElementById("courseContainer");
-  container.innerHTML="";
+snapshot.forEach(docSnap=>{
+totalCourses++;
+const course=docSnap.data();
+const status=course.status?course.status:"active";
 
-  snapshot.forEach(docSnap=>{
-    totalCourses++;
-    const course = docSnap.data();
+container.innerHTML+=`
+<div class="course-card">
+<h3>${course.title}</h3>
+<p>₹ ${course.price}</p>
 
-    container.innerHTML+=`
-      <div class="course-card">
-        <h3>${course.title}</h3>
-        <p>₹ ${course.price}</p>
-        <button class="delete-btn" onclick="deleteCourse('${docSnap.id}')">Delete</button>
-      </div>
-    `;
-  });
+<button onclick="toggleCourseStatus('${docSnap.id}','${status}')" 
+style="margin-top:8px;padding:8px;width:100%;border:none;border-radius:8px;
+background:${status==="active"?"#22c55e":"#64748b"};color:white;">
+${status==="active"?"Active":"Inactive"}
+</button>
 
-  document.getElementById("totalCourses").innerText = totalCourses;
-}
-
-/* REVENUE + AVAILABLE BALANCE */
-async function loadRevenue(uid){
-
-  const purchaseSnap = await getDocs(
-    query(collection(db,"purchases"), where("teacherId","==",uid))
-  );
-
-  let totalRevenue=0, teacherRevenue=0, companyRevenue=0;
-
-  purchaseSnap.forEach(docSnap=>{
-    const data=docSnap.data();
-    totalRevenue+=data.amount;
-    teacherRevenue+=data.teacherRevenue;
-    companyRevenue+=data.platformRevenue;
-  });
-
-  const withdrawSnap = await getDocs(
-    query(collection(db,"withdrawRequests"),
-      where("teacherId","==",uid),
-      where("status","in",["pending","processing"])
-    )
-  );
-
-  let pendingAmount=0;
-  withdrawSnap.forEach(docSnap=>{
-    pendingAmount+=docSnap.data().amount;
-  });
-
-  currentBalance=teacherRevenue-pendingAmount;
-
-  document.getElementById("totalRevenue").innerText="₹"+totalRevenue;
-  document.getElementById("teacherRevenue").innerText="₹"+teacherRevenue;
-  document.getElementById("companyRevenue").innerText="₹"+companyRevenue;
-  document.getElementById("availableBalance").innerText="₹"+currentBalance;
-}
-
-/* WITHDRAW HISTORY */
-async function loadWithdrawHistory(uid){
-
-  const snapshot = await getDocs(
-    query(collection(db,"withdrawRequests"), where("teacherId","==",uid))
-  );
-
-  const container=document.getElementById("withdrawHistory");
-  container.innerHTML="";
-
-  snapshot.forEach(docSnap=>{
-    const data=docSnap.data();
-
-    container.innerHTML+=`
-      <div class="stat-card" style="margin-bottom:15px;">
-        <strong>₹${data.amount}</strong><br>
-        Status: ${data.status}<br>
-        Type: ${data.type}
-      </div>
-    `;
-  });
-}
-
-/* WITHDRAW ACTION */
-document.getElementById("withdrawBtn").addEventListener("click", async ()=>{
-
-  const user=auth.currentUser;
-  const amount=Number(document.getElementById("withdrawAmount").value);
-  const type=document.querySelector('input[name="withdrawType"]:checked').value;
-
-  if(amount<100){ alert("Minimum ₹100 required"); return; }
-  if(amount>currentBalance){ alert("Insufficient balance"); return; }
-
-  await addDoc(collection(db,"withdrawRequests"),{
-    teacherId:user.uid,
-    amount:amount,
-    type:type,
-    status:type==="automatic"?"processing":"pending",
-    createdAt:new Date()
-  });
-
-  document.getElementById("withdrawAmount").value="";
-  loadRevenue(user.uid);
-  loadWithdrawHistory(user.uid);
-
-  document.getElementById("withdrawStatus").innerHTML=
-  "<p style='color:#22c55e;'>Request Sent ✅</p>";
+<button class="delete-btn" onclick="deleteCourse('${docSnap.id}')">Delete</button>
+</div>
+`;
 });
+
+document.getElementById("totalCourses").innerText=totalCourses;
+}
+
+window.toggleCourseStatus=async function(id,currentStatus){
+const newStatus=currentStatus==="active"?"inactive":"active";
+await updateDoc(doc(db,"courses",id),{status:newStatus});
+loadCourses(auth.currentUser.uid);
+}
+
+async function loadRevenue(uid){
+const purchaseSnap=await getDocs(query(collection(db,"purchases"),where("teacherId","==",uid)));
+let totalRevenue=0,teacherRevenue=0,companyRevenue=0;
+purchaseSnap.forEach(d=>{
+const data=d.data();
+totalRevenue+=data.amount;
+teacherRevenue+=data.teacherRevenue;
+companyRevenue+=data.platformRevenue;
+});
+
+const withdrawSnap=await getDocs(query(collection(db,"withdrawRequests"),
+where("teacherId","==",uid),
+where("status","in",["pending","processing"])
+));
+
+let pendingAmount=0;
+withdrawSnap.forEach(d=>{ pendingAmount+=d.data().amount; });
+
+currentBalance=teacherRevenue-pendingAmount;
+
+document.getElementById("totalRevenue").innerText="₹"+totalRevenue;
+document.getElementById("teacherRevenue").innerText="₹"+teacherRevenue;
+document.getElementById("companyRevenue").innerText="₹"+companyRevenue;
+document.getElementById("availableBalance").innerText="₹"+currentBalance;
+}
+
+async function loadWithdrawHistory(uid){
+const snapshot=await getDocs(query(collection(db,"withdrawRequests"),where("teacherId","==",uid)));
+const container=document.getElementById("withdrawHistory");
+container.innerHTML="";
+snapshot.forEach(docSnap=>{
+const data=docSnap.data();
+container.innerHTML+=`
+<div class="stat-card" style="margin-bottom:15px;">
+<strong>₹${data.amount}</strong><br>
+Status: ${data.status}<br>
+Type: ${data.type}
+</div>
+`;
+});
+}
+
+document.getElementById("withdrawBtn").addEventListener("click",async()=>{
+const user=auth.currentUser;
+const amount=Number(document.getElementById("withdrawAmount").value);
+const type=document.querySelector('input[name="withdrawType"]:checked').value;
+
+if(amount<100){alert("Minimum ₹100 required");return;}
+if(amount>currentBalance){alert("Insufficient balance");return;}
+
+await addDoc(collection(db,"withdrawRequests"),{
+teacherId:user.uid,
+amount:amount,
+type:type,
+status:type==="automatic"?"processing":"pending",
+createdAt:new Date()
+});
+
+document.getElementById("withdrawAmount").value="";
+loadRevenue(user.uid);
+loadWithdrawHistory(user.uid);
+document.getElementById("withdrawStatus").innerHTML="<p style='color:#22c55e;'>Request Sent ✅</p>";
+});
+
+window.toggleWithdrawHistory=function(){
+const el=document.getElementById("withdrawHistory");
+el.style.display=el.style.display==="none"?"block":"none";
+}
+window.toggleCourses=function(){
+const el=document.getElementById("courseContainer");
+el.style.display=el.style.display==="none"?"grid":"none";
+}
+
+window.deleteCourse=async function(id){
+if(!confirm("Delete this course?")) return;
+await deleteDoc(doc(db,"courses",id));
+loadCourses(auth.currentUser.uid);
+}
 
 </script>
-
 </body>
 </html>
