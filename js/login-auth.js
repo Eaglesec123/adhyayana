@@ -5,7 +5,8 @@ import {
   getAuth,
   signInWithEmailAndPassword,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  signOut
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -38,6 +39,7 @@ const errorBox = document.getElementById("errorMessage");
 /* ================= EMAIL LOGIN ================= */
 form.addEventListener("submit", async (e)=>{
   e.preventDefault();
+
   errorBox.innerText = "";
 
   const email = document.getElementById("email").value;
@@ -46,31 +48,38 @@ form.addEventListener("submit", async (e)=>{
 
   try {
 
+    // 1️⃣ First sign in
     const cred = await signInWithEmailAndPassword(auth,email,password);
 
-    const userDoc = await getDoc(doc(db,"users",cred.user.uid));
+    // 2️⃣ Get stored role
+    const userSnap = await getDoc(doc(db,"users",cred.user.uid));
 
-    if(!userDoc.exists()){
-      errorBox.innerText = "Account data not found.";
+    if(!userSnap.exists()){
+      errorBox.innerText = "User role not found.";
+      await signOut(auth);
       return;
     }
 
-    const actualRole = userDoc.data().role;
+    const actualRole = userSnap.data().role;
 
-    // 🚨 STRICT ROLE CHECK
+    // 3️⃣ STRICT CHECK
     if(actualRole !== selectedRole){
+
+      // 🔐 SIGN OUT IMMEDIATELY
+      await signOut(auth);
+
       errorBox.innerText =
-        "Access Denied. You are registered as " + actualRole + ".";
-      await auth.signOut();
-      return;
+        "Access blocked. You are registered as '" + actualRole + "'.";
+
+      return; // 🚫 STOP HERE (NO REDIRECT)
     }
 
+    // 4️⃣ Only correct role can enter
     window.location.replace("dashboard.html");
 
   } catch(err){
     errorBox.innerText = err.message;
   }
-
 });
 
 
@@ -82,13 +91,13 @@ googleBtn.addEventListener("click", async ()=>{
   try {
 
     const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth,provider);
 
-    const userDoc = await getDoc(doc(db,"users",result.user.uid));
+    const userSnap = await getDoc(doc(db,"users",result.user.uid));
 
-    if(!userDoc.exists()){
+    if(!userSnap.exists()){
+      await signOut(auth);
       errorBox.innerText = "User role not found.";
-      await auth.signOut();
       return;
     }
 
