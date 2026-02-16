@@ -49,9 +49,7 @@ import {
 
 import { 
   getAuth, 
-  onAuthStateChanged,
-  setPersistence,
-  browserLocalPersistence
+  onAuthStateChanged
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -74,10 +72,6 @@ let firebaseUser = null;
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 const main = document.getElementById("main");
 
-/* ================= FIX LOGIN PERSISTENCE ================= */
-
-await setPersistence(auth, browserLocalPersistence);
-
 /* ================= AUTH CHECK ================= */
 
 onAuthStateChanged(auth, (user) => {
@@ -85,13 +79,9 @@ onAuthStateChanged(auth, (user) => {
   if(user){
     firebaseUser = user;
     renderCart();
-  }else{
-    setTimeout(() => {
-      if(!auth.currentUser){
-        alert("Login first");
-        window.location="login.html";
-      }
-    },1200);
+  } else {
+    alert("Login first");
+    window.location="login.html";
   }
 
 });
@@ -127,9 +117,13 @@ async function renderCart(){
     const course = snap.data();
     total += Number(course.price);
 
+    const imageUrl = course.thumbnail || course.image || "images/default-course.png";
+
     html += `
       <div class="cart-item">
-        <img src="${course.thumbnail}" alt="">
+        <img src="${imageUrl}"
+             onerror="this.onerror=null;this.src='images/default-course.png';"
+             alt="${course.title}">
         <div class="item-details">
           <h4>${course.title}</h4>
           <div class="price">₹${course.price}</div>
