@@ -5,197 +5,72 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login | Adhyayana</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;600&display=swap" rel="stylesheet">
-
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
-
-body{
-  height:100vh;
-  background:#05070d;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  overflow:hidden;
-}
-
-body::before,
-body::after{
-  content:"";
-  position:absolute;
-  width:600px;
-  height:600px;
-  border:1px solid rgba(255,255,255,0.05);
-  border-radius:20px;
-}
-
-body::before{
-  left:-300px;
-  top:50%;
-  transform:translateY(-50%);
-}
-
-body::after{
-  right:-300px;
-  top:50%;
-  transform:translateY(-50%);
-}
-
-.card{
-  width:380px;
-  background:#0d1117;
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:20px;
-  padding:40px;
-  text-align:center;
-  box-shadow:0 0 40px rgba(0,0,0,0.6);
-}
-
-.logo{
-  width:50px;
-  height:50px;
-  background:#111827;
-  border-radius:12px;
-  margin:0 auto 20px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:600;
-  color:#4f8cff;
-}
-
-.card h2{
-  margin-bottom:8px;
-  font-weight:600;
-}
-
-.sub{
-  color:#888;
-  font-size:14px;
-  margin-bottom:25px;
-}
-
-.input-group{
-  margin-bottom:15px;
-}
-
-input{
-  width:100%;
-  padding:14px;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,0.08);
-  background:#0b0f14;
-  color:#fff;
-}
-
-input::placeholder{
-  color:#666;
-}
-
-input:focus{
-  outline:none;
-  border:1px solid #2f81f7;
-}
-
-.login-btn{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:10px;
-  background:#1f6feb;
-  color:white;
-  font-weight:600;
-  cursor:pointer;
-  transition:0.2s;
-}
-
-.login-btn:hover{
-  background:#2f81f7;
-}
-
-.divider{
-  margin:25px 0;
-  display:flex;
-  align-items:center;
-  color:#666;
-  font-size:13px;
-}
-
-.divider::before,
-.divider::after{
-  content:"";
-  flex:1;
-  height:1px;
-  background:rgba(255,255,255,0.08);
-}
-
-.divider span{
-  margin:0 10px;
-}
-
-.socials{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-}
-
-.social-btn{
-  flex:1;
-  padding:12px;
-  background:#111827;
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:10px;
-  cursor:pointer;
-  color:#fff;
-  transition:0.2s;
-}
-
-.social-btn:hover{
-  border:1px solid #2f81f7;
-}
-
-.error{
-  margin-top:10px;
-  color:#ff6b6b;
-  font-size:14px;
-}
-</style>
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 
-<body>
+<body class="auth-body">
 
-<div class="card">
+<div class="auth-wrapper">
 
-<div class="logo">A</div>
+  <!-- LOGO -->
+  <div class="auth-logo">
+    <img src="logo.png" alt="Adhyayana Logo">
+    <h2>ADHYAYANA</h2>
+  </div>
 
-<h2>Welcome Back</h2>
-<p class="sub">Don't have an account yet? Sign up</p>
+  <!-- CARD -->
+  <div class="auth-card auth-animate login-card">
 
-<form id="loginForm">
+    <h3>Welcome Back 👋</h3>
+    <p class="auth-sub">Login as Student or Teacher</p>
 
-<div class="input-group">
-<input type="email" id="email" placeholder="email address" required>
-</div>
+    <form id="loginForm">
 
-<div class="input-group">
-<input type="password" id="password" placeholder="Password" required>
-</div>
+      <!-- ROLE SELECTION -->
+      <div style="display:flex; gap:10px; margin-bottom:15px;">
+        <label style="flex:1;">
+          <input type="radio" name="role" value="student" checked> Student
+        </label>
 
-<button type="submit" class="login-btn">Login</button>
+        <label style="flex:1;">
+          <input type="radio" name="role" value="teacher"> Teacher
+        </label>
+      </div>
 
-</form>
+      <!-- EMAIL -->
+      <input type="email" id="email" placeholder="Email Address" required>
 
-<div class="divider"><span>OR</span></div>
+      <!-- PASSWORD -->
+      <div class="password-field">
+        <input type="password" id="password" placeholder="Password" required>
+      </div>
 
-<div class="socials">
-<button class="social-btn"></button>
-<button class="social-btn" id="googleLogin">G</button>
-<button class="social-btn">X</button>
-</div>
+      <button class="btn primary full" type="submit">
+        Login
+      </button>
 
-<p id="error" class="error"></p>
+    </form>
 
+    <div class="divider">OR</div>
+
+    <!-- GOOGLE LOGIN -->
+    <button id="googleLogin" class="google-btn" type="button">
+      <img src="images/google.png" alt="Google">
+      <span>Continue with Google</span>
+    </button>
+
+    <div class="auth-footer">
+      <p class="auth-switch">
+        Don’t have an account?
+        <a href="signup.html">Sign Up</a>
+      </p>
+      <a href="index.html" class="back-home">← Back to Home</a>
+    </div>
+
+    <p id="error" style="color:red; margin-top:10px;"></p>
+
+  </div>
 </div>
 
 <script type="module">
@@ -207,10 +82,16 @@ import {
   getAuth,
   signInWithEmailAndPassword,
   GoogleAuthProvider,
-  signInWithPopup,
-  onAuthStateChanged
+  signInWithPopup
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
@@ -223,41 +104,48 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
+
+const error = document.getElementById("error");
 
 /* EMAIL LOGIN */
 loginForm.addEventListener("submit", async(e)=>{
   e.preventDefault();
   error.innerText="";
+
+  const selectedRole = document.querySelector('input[name="role"]:checked').value;
+
   try{
-    await signInWithEmailAndPassword(auth,email.value,password.value);
+    const userCred = await signInWithEmailAndPassword(auth,email.value,password.value);
+    const user = userCred.user;
+
+    const userDoc = await getDoc(doc(db,"users",user.uid));
+
+    if(userDoc.exists()){
+      const role = userDoc.data().role;
+
+      if(role !== selectedRole){
+        error.innerText = "Selected role does not match your account.";
+        return;
+      }
+    }
+
     window.location.replace("dashboard.html");
-  }catch(err){
-    error.innerText=err.message;
-  }
-});
 
-/* GOOGLE LOGIN (LOCALHOST SAFE) */
-const provider = new GoogleAuthProvider();
-
-googleLogin.addEventListener("click", async()=>{
-  error.innerText="";
-  try{
-    await signInWithPopup(auth, provider);
   }catch(err){
     error.innerText = err.message;
   }
 });
 
-/* Detect login and redirect */
-onAuthStateChanged(auth, (user)=>{
-  if(user){
-    localStorage.setItem("currentUser", JSON.stringify({
-      uid:user.uid,
-      email:user.email,
-      name:user.displayName
-    }));
+/* GOOGLE LOGIN */
+const provider = new GoogleAuthProvider();
 
+googleLogin.addEventListener("click", async()=>{
+  try{
+    await signInWithPopup(auth, provider);
     window.location.replace("dashboard.html");
+  }catch(err){
+    error.innerText = err.message;
   }
 });
 
