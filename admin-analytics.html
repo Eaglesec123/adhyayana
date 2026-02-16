@@ -214,6 +214,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+/* ===== AUTH CHECK ===== */
+
 onAuthStateChanged(auth, async (user)=>{
 
   if(!user){
@@ -229,8 +231,11 @@ onAuthStateChanged(auth, async (user)=>{
   }
 
   loadCourses(user.uid);
+  loadRevenue(user.uid);
 
 });
+
+/* ===== LOAD COURSES (UNCHANGED) ===== */
 
 async function loadCourses(uid){
 
@@ -238,15 +243,15 @@ async function loadCourses(uid){
   const snapshot = await getDocs(q);
 
   const container = document.getElementById("courseContainer");
+  container.innerHTML = "";
 
-  let totalCourses=0;
-  let totalRevenue=0;
+  let totalCourses = 0;
 
   snapshot.forEach(docSnap=>{
 
     totalCourses++;
+
     const course = docSnap.data();
-    totalRevenue += Number(course.price || 0);
 
     container.innerHTML+=`
       <div class="course-card">
@@ -259,15 +264,38 @@ async function loadCourses(uid){
     `;
   });
 
-  const teacherRevenue = totalRevenue * 0.8;
-  const companyRevenue = totalRevenue * 0.2;
-
   document.getElementById("totalCourses").innerText = totalCourses;
+}
+
+/* ===== REAL REVENUE FROM PURCHASES ===== */
+
+async function loadRevenue(uid){
+
+  const q = query(
+    collection(db,"purchases"),
+    where("teacherId","==",uid)
+  );
+
+  const snapshot = await getDocs(q);
+
+  let totalRevenue = 0;
+  let teacherRevenue = 0;
+  let companyRevenue = 0;
+
+  snapshot.forEach(docSnap=>{
+    const data = docSnap.data();
+
+    totalRevenue += data.amount;
+    teacherRevenue += data.teacherRevenue;
+    companyRevenue += data.platformRevenue;
+  });
+
   document.getElementById("totalRevenue").innerText = "₹"+totalRevenue;
   document.getElementById("teacherRevenue").innerText = "₹"+teacherRevenue;
   document.getElementById("companyRevenue").innerText = "₹"+companyRevenue;
-
 }
+
+/* ===== DELETE COURSE ===== */
 
 window.deleteCourse = async function(id){
   if(!confirm("Delete this course?")) return;
@@ -277,5 +305,7 @@ window.deleteCourse = async function(id){
 
 </script>
 
+
 </body>
 </html>
+
