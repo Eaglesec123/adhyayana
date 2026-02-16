@@ -39,11 +39,21 @@ h2{margin-bottom:30px;font-size:28px;font-weight:800;}
 import { initializeApp } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
-import { getFirestore, doc, getDoc }
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { 
+  getFirestore, 
+  doc, 
+  getDoc,
+  collection,
+  addDoc,
+  serverTimestamp
+} from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-import { getAuth, onAuthStateChanged }
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { 
+  getAuth, 
+  onAuthStateChanged 
+} from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
@@ -61,102 +71,17 @@ const auth = getAuth(app);
 let firebaseUser = null;
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-/* 🔥 AUTH CHECK */
+/* AUTH CHECK */
 onAuthStateChanged(auth,(user)=>{
   if(user){
     firebaseUser = user;
-    renderCart();
   } else {
     alert("Login first");
     window.location="login.html";
   }
 });
 
-async function renderCart(){
-
-  if(cart.length===0){
-    document.getElementById("main").innerHTML=`
-      <div class="empty-wrapper">
-        <div class="empty-box">
-          <div class="empty-icon">🛒</div>
-          <h2>Your cart feels lonely!</h2>
-          <button class="browse-btn" onclick="window.location='market.html'">
-            Browse Courses 🚀
-          </button>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  let total=0;
-  let html=`<div class="container"><div class="cart-card">`;
-
-  for(const item of cart){
-    const snap = await getDoc(doc(db,"courses",item.id));
-
-    if(snap.exists()){
-      const course = snap.data();
-      const price = Number(course.price || 0);
-      const qty = item.qty || 1;
-      const subtotal = price * qty;
-      total += subtotal;
-
-      let thumbnail = course.thumbnailUrl || "https://via.placeholder.com/300x170?text=Course";
-
-      html+=`
-        <div class="cart-item">
-          <img src="${thumbnail}">
-          <div class="item-details">
-            <h3>${course.title}</h3>
-            <div class="price">₹ ${price}</div>
-            <div class="qty-box">
-              <button onclick="changeQty('${item.id}', -1)">-</button>
-              <span>${qty}</span>
-              <button onclick="changeQty('${item.id}', 1)">+</button>
-            </div>
-            <div>Subtotal: ₹ ${subtotal}</div>
-            <button class="remove-btn" onclick="removeFromCart('${item.id}')">
-              Remove
-            </button>
-          </div>
-        </div>
-      `;
-    }
-  }
-
-  html+=`
-      </div>
-      <div class="summary">
-        <h3>Order Summary</h3>
-        <div>Total ₹ ${total}</div>
-        <button class="checkout-btn" onclick="checkout(${total})">
-          Secure Payment 🔒
-        </button>
-      </div>
-    </div>
-  `;
-
-  document.getElementById("main").innerHTML=html;
-}
-
-window.changeQty=function(id,change){
-  cart=cart.map(item=>{
-    if(item.id===id){
-      item.qty=(item.qty||1)+change;
-      if(item.qty<1)item.qty=1;
-    }
-    return item;
-  });
-  localStorage.setItem("cart",JSON.stringify(cart));
-  renderCart();
-}
-
-window.removeFromCart=function(id){
-  cart=cart.filter(item=>item.id!==id);
-  localStorage.setItem("cart",JSON.stringify(cart));
-  renderCart();
-}
+/* ===== UPDATED CHECKOUT ===== */
 
 window.checkout = async function(total){
 
@@ -167,6 +92,7 @@ window.checkout = async function(total){
   }
 
   try{
+
     const res = await fetch("https://payment-backend-1-wobl.onrender.com/create-order",{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
@@ -182,7 +108,28 @@ window.checkout = async function(total){
       order_id: data.id,
       name: "Adhyayana",
       description: "Course Purchase",
-      handler: function(response){
+
+      handler: async function(){
+
+        const courseId = cart[0].id;
+
+        const snap = await getDoc(doc(db,"courses",courseId));
+        const course = snap.data();
+
+        const amount = Number(course.price);
+        const teacherRevenue = amount * 0.8;
+        const platformRevenue = amount * 0.2;
+
+        await addDoc(collection(db,"purchases"),{
+          courseId,
+          teacherId: course.creatorId,
+          studentId: firebaseUser.uid,
+          amount,
+          teacherRevenue,
+          platformRevenue,
+          createdAt: serverTimestamp()
+        });
+
         localStorage.removeItem("cart");
         alert("Payment Successful 🎉");
         window.location="dashboard.html";
@@ -198,5 +145,7 @@ window.checkout = async function(total){
 }
 
 </script>
+
 </body>
 </html>
+
