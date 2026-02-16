@@ -37,13 +37,12 @@ const googleBtn = document.getElementById("googleSignup");
 form.addEventListener("submit", async (e)=>{
   e.preventDefault();
 
-  const name = document.getElementById("signupName").value;
-  const email = document.getElementById("signupEmail").value;
-  const password = document.getElementById("signupPassword").value;
-  const role = document.getElementById("signupRole").value;
+  const name = signupName.value;
+  const email = signupEmail.value;
+  const password = signupPassword.value;
+  const role = signupRole.value;
 
   try {
-
     const userCred = await createUserWithEmailAndPassword(auth,email,password);
 
     await setDoc(doc(db,"users",userCred.user.uid),{
@@ -60,13 +59,10 @@ form.addEventListener("submit", async (e)=>{
   }
 });
 
-/* GOOGLE SIGNUP */
 googleBtn.addEventListener("click", async ()=>{
-
   try {
-
     const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth,provider);
 
     const userRef = doc(db,"users",result.user.uid);
     const snap = await getDoc(userRef);
@@ -85,5 +81,4 @@ googleBtn.addEventListener("click", async ()=>{
   } catch(err){
     alert(err.message);
   }
-
 });
