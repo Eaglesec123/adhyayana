@@ -8,7 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
 <style>
-/* YOUR ORIGINAL UI — NOT CHANGED */
+
+/* Modern Animated UI – Logic Not Changed */
 
 *{
   margin:0;
@@ -18,59 +19,90 @@
 }
 
 body{
-  background: linear-gradient(135deg,#667eea,#764ba2);
-  color:#333;
+  min-height:100vh;
+  background: linear-gradient(-45deg,#667eea,#764ba2,#6a11cb,#2575fc);
+  background-size: 400% 400%;
+  animation: gradientMove 12s ease infinite;
+  color:white;
+  overflow:hidden;
+}
+
+@keyframes gradientMove{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
 }
 
 .app{
   display:flex;
   height:100vh;
+  backdrop-filter: blur(20px);
 }
 
+/* SIDEBAR */
+
 .sidebar{
-  width:250px;
+  width:260px;
   background: rgba(255,255,255,0.08);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(25px);
   padding:25px;
   display:flex;
   flex-direction:column;
   justify-content:space-between;
+  border-right:1px solid rgba(255,255,255,0.1);
 }
 
 .brand{text-align:center;}
-.brand img{width:50px;margin-bottom:10px;}
-.brand h3{color:white;}
+.brand img{width:55px;margin-bottom:10px;}
+.brand h3{color:white; font-weight:800; letter-spacing:1px;}
 
 .sidebar nav a{
   display:block;
-  padding:12px;
+  padding:14px;
   margin:8px 0;
   color:white;
   text-decoration:none;
-  border-radius:8px;
-  transition:.3s;
+  border-radius:10px;
+  transition: all 0.3s ease;
+  font-weight:500;
 }
 
 .sidebar nav a:hover,
 .sidebar nav a.active{
-  background:white;
-  color:#667eea;
+  background:rgba(255,255,255,0.2);
+  transform:translateX(5px);
 }
 
 .logout-btn{
   padding:12px;
   border:none;
-  border-radius:8px;
-  background:#ff4d4d;
+  border-radius:10px;
+  background:linear-gradient(90deg,#ff416c,#ff4b2b);
   color:white;
   cursor:pointer;
+  font-weight:600;
+  transition:0.3s;
 }
+
+.logout-btn:hover{
+  transform:scale(1.05);
+}
+
+/* MAIN */
 
 .main{
   flex:1;
-  padding:30px;
+  padding:40px;
   overflow:auto;
+  animation:fadeInMain 0.8s ease;
 }
+
+@keyframes fadeInMain{
+  from{opacity:0; transform:translateY(20px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+/* TOPBAR */
 
 .topbar{
   display:flex;
@@ -79,19 +111,106 @@ body{
   margin-bottom:30px;
 }
 
+.topbar input{
+  padding:12px 18px;
+  border-radius:30px;
+  border:none;
+  width:280px;
+  outline:none;
+  font-size:14px;
+}
+
 .profile{
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:12px;
 }
 
 .profile img{
-  width:40px;
-  height:40px;
+  width:45px;
+  height:45px;
   border-radius:50%;
   border:2px solid white;
+  transition:0.3s;
 }
+
+.profile img:hover{
+  transform:scale(1.1);
+}
+
+/* STATS CARDS */
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:25px;
+  margin-bottom:35px;
+}
+
+.card{
+  background:rgba(255,255,255,0.1);
+  padding:28px;
+  border-radius:18px;
+  backdrop-filter: blur(25px);
+  transition:0.4s;
+  animation:cardFade 0.6s ease forwards;
+}
+
+@keyframes cardFade{
+  from{opacity:0; transform:translateY(20px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+.card:hover{
+  transform:translateY(-8px);
+  box-shadow:0 20px 40px rgba(0,0,0,0.3);
+}
+
+.card.green{
+  background:linear-gradient(45deg,#00c853,#64dd17);
+  color:white;
+}
+
+.card h3{
+  font-size:30px;
+  margin-bottom:5px;
+}
+
+/* TABLE */
+
+.table-card{
+  background:rgba(255,255,255,0.1);
+  padding:28px;
+  border-radius:18px;
+  backdrop-filter: blur(25px);
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+}
+
+th,td{
+  padding:14px;
+  text-align:left;
+}
+
+th{
+  background:rgba(255,255,255,0.2);
+  border-radius:6px;
+}
+
+tr{
+  transition:0.3s;
+}
+
+tr:hover{
+  background:rgba(255,255,255,0.1);
+}
+
 </style>
+
 </head>
 
 <body>
@@ -266,4 +385,5 @@ window.logout = async function(){
 
 </body>
 </html>
+
 
