@@ -167,12 +167,31 @@ body{
 <h3>💸 Withdraw Earnings</h3><br>
 
 <div class="stat-card" style="max-width:400px;">
+
   <input type="number" id="withdrawAmount" placeholder="Enter amount"
     style="width:100%;padding:10px;border-radius:10px;border:none;margin-bottom:15px;">
+
+  <div style="margin-bottom:15px;text-align:left;">
+    <label>
+      <input type="radio" name="withdrawType" value="manual" checked>
+      Manual
+    </label>
+    &nbsp;&nbsp;
+    <label>
+      <input type="radio" name="withdrawType" value="automatic">
+      Automatic
+    </label>
+  </div>
+
   <button id="withdrawBtn"
     style="padding:10px;width:100%;border:none;border-radius:10px;background:linear-gradient(90deg,#f59e0b,#d97706);color:white;font-weight:600;cursor:pointer;">
     Withdraw Now
   </button>
+
+  <p style="font-size:12px;margin-top:10px;color:#94a3b8;">
+    Minimum Withdraw: ₹100
+  </p>
+
 </div>
 
 <br>
@@ -220,8 +239,6 @@ const db = getFirestore(app);
 let currentBalance = 0;
 let authChecked = false;
 
-/* ===== SAFE AUTH CHECK (NO AUTO LOGOUT) ===== */
-
 onAuthStateChanged(auth, async (user)=>{
 
   if(authChecked) return;
@@ -237,12 +254,10 @@ onAuthStateChanged(auth, async (user)=>{
   }
 
   try{
-
     const snap = await getDoc(doc(db,"users",user.uid));
 
     if(snap.exists()){
       const role = snap.data().role;
-
       if(role && role !== "teacher"){
         window.location="dashboard.html";
         return;
@@ -253,14 +268,12 @@ onAuthStateChanged(auth, async (user)=>{
     loadRevenue(user.uid);
 
   }catch(error){
-    console.error("Auth Error:", error);
+    console.error(error);
     loadCourses(user.uid);
     loadRevenue(user.uid);
   }
 
 });
-
-/* COURSES */
 
 async function loadCourses(uid){
 
@@ -274,7 +287,6 @@ async function loadCourses(uid){
 
   snapshot.forEach(docSnap=>{
     totalCourses++;
-
     const course = docSnap.data();
 
     container.innerHTML+=`
@@ -290,8 +302,6 @@ async function loadCourses(uid){
 
   document.getElementById("totalCourses").innerText = totalCourses;
 }
-
-/* REVENUE */
 
 async function loadRevenue(uid){
 
@@ -316,23 +326,25 @@ async function loadRevenue(uid){
   document.getElementById("companyRevenue").innerText = "₹"+companyRevenue;
 }
 
-/* DELETE COURSE */
-
 window.deleteCourse = async function(id){
   if(!confirm("Delete this course?")) return;
   await deleteDoc(doc(db,"courses",id));
   location.reload();
 };
 
-/* WITHDRAW */
-
 document.getElementById("withdrawBtn").addEventListener("click", async ()=>{
 
   const user = auth.currentUser;
   const amount = Number(document.getElementById("withdrawAmount").value);
+  const type = document.querySelector('input[name="withdrawType"]:checked').value;
 
   if(!amount || amount <= 0){
     alert("Enter valid amount");
+    return;
+  }
+
+  if(amount < 100){
+    alert("Minimum withdraw amount is ₹100");
     return;
   }
 
@@ -344,7 +356,8 @@ document.getElementById("withdrawBtn").addEventListener("click", async ()=>{
   await addDoc(collection(db,"withdrawRequests"),{
     teacherId: user.uid,
     amount: amount,
-    status: "pending",
+    type: type,
+    status: type === "automatic" ? "processing" : "pending",
     createdAt: new Date()
   });
 
@@ -352,14 +365,12 @@ document.getElementById("withdrawBtn").addEventListener("click", async ()=>{
   document.getElementById("teacherRevenue").innerText = "₹"+currentBalance;
 
   document.getElementById("withdrawStatus").innerHTML =
-    "<p style='color:#22c55e;'>Withdraw Request Sent ✅</p>";
+    "<p style='color:#22c55e;'>Withdraw Request Sent ✅ ("+type+")</p>";
 
   document.getElementById("withdrawAmount").value="";
 });
 
 </script>
 
-
 </body>
 </html>
-
