@@ -17,6 +17,8 @@ import {
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+
+/* ================= FIREBASE CONFIG ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
   authDomain: "login-65d4b.firebaseapp.com",
@@ -30,14 +32,27 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+
+/* ================= ELEMENTS ================= */
 const form = document.getElementById("loginForm");
 const googleBtn = document.getElementById("googleLogin");
-const errorBox = document.getElementById("errorMessage");
 
-/* EMAIL LOGIN */
+/* Safe error handling (even if no error element in HTML) */
+function showError(message){
+  const errorBox = document.getElementById("errorMessage");
+  if(errorBox){
+    errorBox.innerText = message;
+  } else {
+    alert(message);
+  }
+}
+
+
+/* ================= EMAIL LOGIN ================= */
 form.addEventListener("submit", async (e)=>{
   e.preventDefault();
-  errorBox.innerText = "";
+
+  showError("");
 
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -45,40 +60,47 @@ form.addEventListener("submit", async (e)=>{
 
   try {
 
+    // 1️⃣ Sign in
     const cred = await signInWithEmailAndPassword(auth,email,password);
 
+    // 2️⃣ Get role from Firestore
     const userDoc = await getDoc(doc(db,"users",cred.user.uid));
 
     if(!userDoc.exists()){
       await signOut(auth);
-      errorBox.innerText = "User role not found.";
+      showError("User role not found.");
       return;
     }
 
     const actualRole = userDoc.data().role;
 
+    // 3️⃣ Strict role validation
     if(actualRole !== selectedRole){
 
       await signOut(auth);
 
-      errorBox.innerText =
-        "Access denied. You are registered as '" + actualRole + "'.";
+      showError(
+        "Access denied. You are registered as '" +
+        actualRole +
+        "'."
+      );
 
       return;
     }
 
-    // ✅ ONLY HERE redirect
+    // 4️⃣ Only correct role can enter
     window.location.href = "dashboard.html";
 
   } catch(err){
-    errorBox.innerText = err.message;
+    showError(err.message);
   }
 });
 
-/* GOOGLE LOGIN */
+
+/* ================= GOOGLE LOGIN ================= */
 googleBtn.addEventListener("click", async ()=>{
 
-  errorBox.innerText = "";
+  showError("");
 
   try {
 
@@ -89,13 +111,14 @@ googleBtn.addEventListener("click", async ()=>{
 
     if(!userDoc.exists()){
       await signOut(auth);
-      errorBox.innerText = "User role not found.";
+      showError("User role not found.");
       return;
     }
 
     window.location.href = "dashboard.html";
 
   } catch(err){
-    errorBox.innerText = err.message;
+    showError(err.message);
   }
+
 });
