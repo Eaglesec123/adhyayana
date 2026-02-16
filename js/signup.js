@@ -6,7 +6,8 @@ import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
-  signOut
+  signOut,
+  fetchSignInMethodsForEmail
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -14,9 +15,15 @@ import {
   getFirestore,
   doc,
   setDoc,
-  getDoc
+  getDoc,
+  serverTimestamp
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
+/* =========================
+   FIREBASE CONFIG
+========================= */
 
 const firebaseConfig = {
   apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
@@ -30,6 +37,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+
+/* =========================
+   ELEMENTS
+========================= */
 
 const form = document.getElementById("signupForm");
 const googleBtn = document.getElementById("googleSignup");
@@ -51,13 +63,23 @@ form.addEventListener("submit", async (e)=>{
 
   try {
 
+    // 🔥 Check if email already exists
+    const methods = await fetchSignInMethodsForEmail(auth, email);
+
+    if (methods.length > 0) {
+      errorMessage.textContent = 
+        "This email is already registered. Please login.";
+      return;
+    }
+
+    // Create account
     const cred = await createUserWithEmailAndPassword(auth,email,password);
 
-    // 🔥 Save role in Firestore
+    // Save user role
     await setDoc(doc(db,"users",cred.user.uid),{
       email: email,
       role: selectedRole,
-      createdAt: new Date()
+      createdAt: serverTimestamp()
     });
 
     sessionStorage.setItem("role", selectedRole);
@@ -91,18 +113,9 @@ googleBtn.addEventListener("click", async ()=>{
 
     // 🔥 If already registered
     if(snap.exists()){
-
-      const existingRole = snap.data().role;
-
-      if(existingRole !== selectedRole){
-        await signOut(auth);
-        errorMessage.textContent =
-          "This email is already registered as " + existingRole;
-        return;
-      }
-
-      sessionStorage.setItem("role", existingRole);
-      window.location.href = "dashboard.html";
+      await signOut(auth);
+      errorMessage.textContent =
+        "This email is already registered. Please login.";
       return;
     }
 
@@ -110,7 +123,7 @@ googleBtn.addEventListener("click", async ()=>{
     await setDoc(userRef,{
       email: result.user.email,
       role: selectedRole,
-      createdAt: new Date()
+      createdAt: serverTimestamp()
     });
 
     sessionStorage.setItem("role", selectedRole);
