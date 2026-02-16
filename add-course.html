@@ -88,7 +88,6 @@ button:hover{
   <div class="message" id="msg"></div>
 </div>
 
-
 <script type="module">
 
 import { initializeApp } from 
@@ -96,20 +95,18 @@ import { initializeApp } from
 
 import { 
   getAuth, 
-  onAuthStateChanged 
+  onAuthStateChanged,
+  signOut
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  serverTimestamp,
-  doc,
-  getDoc
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  serverTimestamp 
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
 
 const firebaseConfig = {
   apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
@@ -124,66 +121,70 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentUser;
+/* =========================
+   AUTH + ROLE CHECK
+========================= */
 
-
-/* CHECK AUTH + ROLE */
-onAuthStateChanged(auth, async (user)=>{
+onAuthStateChanged(auth, (user)=>{
 
   if(!user){
-    window.location.replace("login.html");
+    window.location="login.html";
     return;
   }
 
-  currentUser = user;
+  const role = sessionStorage.getItem("role");
 
-  const userDoc = await getDoc(doc(db,"users",user.uid));
-
-  if(!userDoc.exists() || userDoc.data().role !== "teacher"){
-    alert("Access Denied! Only Teachers can add courses.");
-    window.location.replace("dashboard.html");
+  // 🔥 Only teacher allowed
+  if(role !== "teacher"){
+    alert("Access denied! Only teachers can upload courses.");
+    window.location="dashboard.html";
+    return;
   }
+
 });
 
+/* UPLOAD LOGIC (UNCHANGED) */
 
-/* ADD COURSE */
-window.addCourse = async function(){
+uploadBtn.addEventListener("click",async ()=>{
 
-  const title = document.getElementById("title").value.trim();
-  const description = document.getElementById("description").value.trim();
-  const price = document.getElementById("price").value;
+  const video=videoFile.files[0];
+  const thumbnail=thumbnailFile.files[0];
 
-  if(!title || !description || !price){
-    document.getElementById("msg").innerText = "⚠ Please fill all fields";
-    document.getElementById("msg").style.color = "red";
+  if(!video || !thumbnail){
+    alert("Select thumbnail and video");
     return;
   }
 
-  try{
+  progressContainer.style.display="block";
+  progressText.style.display="block";
+  progressText.innerText="Uploading...";
 
-    await addDoc(collection(db,"courses"),{
-      title: title,
-      description: description,
-      price: Number(price),
-      creatorId: currentUser.uid,
-      createdAt: serverTimestamp()
-    });
+  const thumbnailUrl=await uploadImage(thumbnail);
+  const videoUrl=await uploadVideo(video);
 
-    document.getElementById("msg").innerText = "✅ Course Created Successfully!";
-    document.getElementById("msg").style.color = "green";
+  await addDoc(collection(db,"courses"),{
+    title:title.value,
+    price:Number(price.value),
+    description:description.value,
+    thumbnailUrl:thumbnailUrl,
+    videoUrl:videoUrl,
+    creatorId:auth.currentUser.uid,
+    isPublished:true,
+    createdAt:serverTimestamp()
+  });
 
-    document.getElementById("title").value = "";
-    document.getElementById("description").value = "";
-    document.getElementById("price").value = "";
+  progressBar.style.width="100%";
+  progressText.innerText="100% Upload Complete 🎉";
 
-  }catch(error){
-    document.getElementById("msg").innerText = "❌ Error: " + error.message;
-    document.getElementById("msg").style.color = "red";
-  }
+  setTimeout(()=>{
+    window.location="dashboard.html";
+  },1000);
 
-}
+});
 
 </script>
 
+
 </body>
 </html>
+
