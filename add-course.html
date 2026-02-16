@@ -21,7 +21,41 @@ body{
   justify-content:center;
   align-items:center;
   height:100vh;
+  overflow:hidden;
+  position:relative;
 }
+
+/* 📖 BOOK PAGE TURN ANIMATION */
+
+.book{
+  position:absolute;
+  width:220px;
+  height:220px;
+  background:white;
+  border-radius:6px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.3);
+  top:20%;
+  left:8%;
+  animation:pageTurn 6s infinite ease-in-out;
+  transform-origin:left;
+  opacity:0.15;
+}
+
+.book:before{
+  content:"📖";
+  font-size:120px;
+  position:absolute;
+  top:30px;
+  left:50px;
+}
+
+@keyframes pageTurn{
+  0%{transform:rotateY(0deg);}
+  50%{transform:rotateY(-180deg);}
+  100%{transform:rotateY(0deg);}
+}
+
+/* EXISTING UI */
 
 .container{
   background:white;
@@ -29,6 +63,7 @@ body{
   padding:30px;
   border-radius:18px;
   box-shadow:0 20px 40px rgba(0,0,0,0.2);
+  z-index:2;
 }
 
 h2{
@@ -64,6 +99,7 @@ button{
 
 button:hover{
   background:#5563d1;
+  transform:translateY(-3px);
 }
 
 .message{
@@ -71,10 +107,19 @@ button:hover{
   text-align:center;
   font-weight:600;
 }
+
+/* MOBILE FIX */
+@media(max-width:480px){
+  .container{
+    width:90%;
+  }
+}
 </style>
 </head>
 
 <body>
+
+<div class="book"></div>
 
 <div class="container">
   <h2>📚 Add New Course</h2>
@@ -93,11 +138,7 @@ button:hover{
 import { initializeApp } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
-import { 
-  getAuth, 
-  onAuthStateChanged,
-  signOut
-} from 
+import { getAuth, onAuthStateChanged } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import { 
@@ -109,7 +150,7 @@ import {
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
+  apiKey: "YOUR_FIREBASE_KEY",
   authDomain: "login-65d4b.firebaseapp.com",
   projectId: "login-65d4b",
   storageBucket: "login-65d4b.appspot.com",
@@ -121,70 +162,69 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* =========================
-   AUTH + ROLE CHECK
-========================= */
+/* AUTH + ROLE CHECK */
 
-onAuthStateChanged(auth, (user)=>{
-
+onAuthStateChanged(auth,(user)=>{
   if(!user){
     window.location="login.html";
     return;
   }
 
-  const role = sessionStorage.getItem("role");
+  const role=sessionStorage.getItem("role");
 
-  // 🔥 Only teacher allowed
-  if(role !== "teacher"){
+  if(role!=="teacher"){
     alert("Access denied! Only teachers can upload courses.");
     window.location="dashboard.html";
     return;
   }
-
 });
 
-/* UPLOAD LOGIC (UNCHANGED) */
+/* SIMPLE COURSE UPLOAD */
 
-uploadBtn.addEventListener("click",async ()=>{
+window.addCourse = async function(){
 
-  const video=videoFile.files[0];
-  const thumbnail=thumbnailFile.files[0];
+  const title=document.getElementById("title").value;
+  const description=document.getElementById("description").value;
+  const price=document.getElementById("price").value;
+  const msg=document.getElementById("msg");
 
-  if(!video || !thumbnail){
-    alert("Select thumbnail and video");
+  if(!title || !description || !price){
+    msg.style.color="red";
+    msg.innerText="Please fill all fields";
     return;
   }
 
-  progressContainer.style.display="block";
-  progressText.style.display="block";
-  progressText.innerText="Uploading...";
+  try{
 
-  const thumbnailUrl=await uploadImage(thumbnail);
-  const videoUrl=await uploadVideo(video);
+    await addDoc(collection(db,"courses"),{
+      title:title,
+      description:description,
+      price:Number(price),
+      creatorId:auth.currentUser.uid,
+      isPublished:true,
+      createdAt:serverTimestamp()
+    });
 
-  await addDoc(collection(db,"courses"),{
-    title:title.value,
-    price:Number(price.value),
-    description:description.value,
-    thumbnailUrl:thumbnailUrl,
-    videoUrl:videoUrl,
-    creatorId:auth.currentUser.uid,
-    isPublished:true,
-    createdAt:serverTimestamp()
-  });
+    msg.style.color="green";
+    msg.innerText="Course Uploaded Successfully 🎉";
 
-  progressBar.style.width="100%";
-  progressText.innerText="100% Upload Complete 🎉";
+    document.getElementById("title").value="";
+    document.getElementById("description").value="";
+    document.getElementById("price").value="";
 
-  setTimeout(()=>{
-    window.location="dashboard.html";
-  },1000);
+    setTimeout(()=>{
+      window.location="dashboard.html";
+    },1000);
 
-});
+  }catch(error){
+    console.error(error);
+    msg.style.color="red";
+    msg.innerText="Upload failed ❌";
+  }
+
+};
 
 </script>
 
-
 </body>
 </html>
-
