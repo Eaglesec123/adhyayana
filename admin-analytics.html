@@ -4,12 +4,200 @@
 <meta charset="UTF-8">
 <title>Admin Analytics | Adhyayana</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+
+body{
+  background:linear-gradient(135deg,#0f172a,#1e293b);
+  color:white;
+  display:flex;
+  min-height:100vh;
+  overflow:hidden;
+}
+
+/* ===== SIDEBAR ===== */
+
+.sidebar{
+  width:250px;
+  background:rgba(15,23,42,.95);
+  padding:30px 20px;
+  box-shadow:5px 0 30px rgba(0,0,0,.6);
+}
+
+.logo{
+  font-size:22px;
+  font-weight:600;
+  margin-bottom:40px;
+  text-align:center;
+}
+
+.nav-link{
+  display:block;
+  padding:12px 15px;
+  margin:10px 0;
+  text-decoration:none;
+  color:#94a3b8;
+  border-radius:12px;
+  transition:.3s;
+}
+
+.nav-link:hover{
+  background:#2563eb;
+  color:white;
+  transform:translateX(8px);
+}
+
+.upload-btn{
+  margin-top:20px;
+  padding:12px;
+  width:100%;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(90deg,#22c55e,#16a34a);
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+  transition:.3s;
+}
+
+.upload-btn:hover{
+  transform:translateY(-4px);
+  box-shadow:0 15px 35px rgba(34,197,94,.4);
+}
+
+/* ===== MAIN ===== */
+
+.main{
+  flex:1;
+  padding:40px;
+  overflow:auto;
+  animation:fadeIn .6s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(20px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+/* ===== STATS ===== */
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:25px;
+}
+
+.stat-card{
+  background:rgba(30,41,59,.9);
+  padding:25px;
+  border-radius:20px;
+  text-align:center;
+  box-shadow:0 25px 60px rgba(0,0,0,.5);
+  transition:.4s;
+}
+
+.stat-card:hover{
+  transform:rotateY(6deg) scale(1.05);
+}
+
+.stat-number{
+  font-size:28px;
+  font-weight:700;
+}
+
+/* ===== COURSES ===== */
+
+.course-grid{
+  margin-top:40px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:25px;
+}
+
+.course-card{
+  background:rgba(30,41,59,.95);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 30px 70px rgba(0,0,0,.6);
+  transition:.4s;
+  transform-style:preserve-3d;
+}
+
+.course-card:hover{
+  transform:rotateY(8deg) scale(1.05);
+}
+
+.course-card img{
+  width:100%;
+  height:160px;
+  object-fit:cover;
+}
+
+.course-content{
+  padding:20px;
+}
+
+.delete-btn{
+  margin-top:12px;
+  background:#ef4444;
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+  color:white;
+  cursor:pointer;
+  width:100%;
+  transition:.3s;
+}
+
+.delete-btn:hover{
+  background:#dc2626;
+  transform:translateY(-3px);
+}
+
+@media(max-width:768px){
+  body{flex-direction:column;}
+  .sidebar{width:100%;display:flex;flex-direction:column;}
+}
+</style>
 </head>
 
 <body>
 
-<h2>👨‍🏫 Teacher Admin Panel</h2>
-<p>Welcome to Admin Analytics</p>
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">👨‍🏫 Teacher Panel</div>
+
+  <a href="admin-analytics.html" class="nav-link">Dashboard</a>
+  <a href="profile.html" class="nav-link">Profile</a>
+
+  <button class="upload-btn" onclick="window.location='add-course.html'">
+    ➕ Upload New Course
+  </button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <h2>Admin Analytics</h2><br>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-number" id="totalCourses">0</div>
+      <div>Total Courses</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-number">Active</div>
+      <div>Status</div>
+    </div>
+  </div>
+
+  <div class="course-grid" id="courseContainer"></div>
+
+</div>
 
 <script type="module">
 
@@ -17,15 +205,20 @@ import { initializeApp } from
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
 import { 
-  getAuth, 
-  onAuthStateChanged 
+  getAuth,
+  onAuthStateChanged
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-import { 
+import {
   getFirestore,
   doc,
-  getDoc
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  deleteDoc
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -43,7 +236,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* 🔒 TEACHER ONLY ACCESS */
+/* 🔒 TEACHER ONLY */
 onAuthStateChanged(auth, async (user)=>{
 
   if(!user){
@@ -55,9 +248,56 @@ onAuthStateChanged(auth, async (user)=>{
 
   if(!snap.exists() || snap.data().role !== "teacher"){
     window.location="dashboard.html";
+    return;
   }
 
+  loadCourses(user.uid);
+
 });
+
+/* LOAD TEACHER COURSES */
+async function loadCourses(uid){
+
+  const q = query(collection(db,"courses"), where("creatorId","==",uid));
+  const querySnapshot = await getDocs(q);
+
+  const container = document.getElementById("courseContainer");
+  container.innerHTML="";
+
+  let count=0;
+
+  querySnapshot.forEach(docSnap=>{
+    count++;
+
+    const course = docSnap.data();
+
+    container.innerHTML+=`
+      <div class="course-card">
+        <img src="${course.thumbnailUrl}">
+        <div class="course-content">
+          <h3>${course.title}</h3>
+          <p>₹ ${course.price}</p>
+          <button class="delete-btn"
+            onclick="deleteCourse('${docSnap.id}')">
+            Delete Course
+          </button>
+        </div>
+      </div>
+    `;
+  });
+
+  document.getElementById("totalCourses").innerText = count;
+}
+
+/* DELETE COURSE */
+window.deleteCourse = async function(id){
+
+  const confirmDelete = confirm("Delete this course?");
+  if(!confirmDelete) return;
+
+  await deleteDoc(doc(db,"courses",id));
+  location.reload();
+}
 
 </script>
 
