@@ -17,7 +17,6 @@ import {
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-
 const firebaseConfig = {
   apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
   authDomain: "login-65d4b.firebaseapp.com",
@@ -34,8 +33,7 @@ const db = getFirestore(app);
 const form = document.getElementById("loginForm");
 const googleBtn = document.getElementById("googleLogin");
 
-
-/* ================= EMAIL LOGIN ================= */
+/* EMAIL LOGIN */
 form.addEventListener("submit", async (e)=>{
   e.preventDefault();
 
@@ -45,34 +43,27 @@ form.addEventListener("submit", async (e)=>{
 
   try {
 
-    // 1️⃣ Sign in
     const cred = await signInWithEmailAndPassword(auth,email,password);
 
-    // 2️⃣ Get stored role
-    const userDoc = await getDoc(doc(db,"users",cred.user.uid));
+    const snap = await getDoc(doc(db,"users",cred.user.uid));
 
-    if(!userDoc.exists()){
+    if(!snap.exists()){
       await signOut(auth);
       alert("User role not found.");
       return;
     }
 
-    const actualRole = userDoc.data().role;
+    const realRole = snap.data().role;
 
-    // 3️⃣ STRICT ROLE BLOCK
-    if(actualRole !== selectedRole){
-
+    if(realRole !== selectedRole){
       await signOut(auth);
-
-      alert(
-        "Access denied.\n" +
-        "You registered as: " + actualRole
-      );
-
-      return; // 🚫 STOP — NO REDIRECT
+      alert("Access denied. You are registered as " + realRole);
+      return;
     }
 
-    // 4️⃣ Only correct role allowed
+    // Save role in session (important)
+    sessionStorage.setItem("role", realRole);
+
     window.location.href = "dashboard.html";
 
   } catch(err){
@@ -80,27 +71,26 @@ form.addEventListener("submit", async (e)=>{
   }
 });
 
-
-/* ================= GOOGLE LOGIN ================= */
+/* GOOGLE LOGIN */
 googleBtn.addEventListener("click", async ()=>{
-
   try {
 
     const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth,provider);
 
-    const userDoc = await getDoc(doc(db,"users",result.user.uid));
+    const snap = await getDoc(doc(db,"users",result.user.uid));
 
-    if(!userDoc.exists()){
+    if(!snap.exists()){
       await signOut(auth);
       alert("User role not found.");
       return;
     }
+
+    sessionStorage.setItem("role", snap.data().role);
 
     window.location.href = "dashboard.html";
 
   } catch(err){
     alert(err.message);
   }
-
 });
