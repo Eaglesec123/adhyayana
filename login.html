@@ -13,51 +13,45 @@
 
 <div class="auth-wrapper">
 
-  <div class="auth-logo">
-    <img src="logo.png" alt="Adhyayana Logo">
-    <h2>ADHYAYANA</h2>
-  </div>
+<div class="auth-logo">
+<img src="logo.png">
+<h2>ADHYAYANA</h2>
+</div>
 
-  <div class="auth-card auth-animate login-card">
+<div class="auth-card auth-animate login-card">
 
-    <h3>Welcome Back 👋</h3>
-    <p class="auth-sub">Login as Student or Teacher</p>
+<h3>Login</h3>
 
-    <form id="loginForm">
+<form id="loginForm">
 
-      <!-- ROLE SELECTION -->
-      <div style="display:flex; gap:15px; margin-bottom:15px;">
-        <label>
-          <input type="radio" name="role" value="student" checked> Student
-        </label>
+<div style="display:flex; gap:15px; margin-bottom:15px;">
+<label><input type="radio" name="role" value="student" checked> Student</label>
+<label><input type="radio" name="role" value="teacher"> Teacher</label>
+</div>
 
-        <label>
-          <input type="radio" name="role" value="teacher"> Teacher
-        </label>
-      </div>
+<input type="email" id="email" placeholder="Email" required>
+<input type="password" id="password" placeholder="Password" required>
 
-      <!-- EMAIL -->
-      <input type="email" id="email" placeholder="Email Address" required>
+<button class="btn primary full" type="submit">
+Login
+</button>
 
-      <!-- PASSWORD -->
-      <input type="password" id="password" placeholder="Password" required>
+</form>
 
-      <button class="btn primary full" type="submit">
-        Login
-      </button>
+<div class="divider">OR</div>
 
-    </form>
+<button id="googleLogin" class="google-btn" type="button">
+Continue with Google
+</button>
 
-    <div class="auth-footer">
-      <p class="auth-switch">
-        Don’t have an account?
-        <a href="signup.html">Sign Up</a>
-      </p>
-    </div>
+<p class="auth-switch">
+No account?
+<a href="signup.html">Signup</a>
+</p>
 
-    <p id="error" style="color:red; margin-top:10px;"></p>
+<p id="error" style="color:red;"></p>
 
-  </div>
+</div>
 </div>
 
 <script type="module">
@@ -66,31 +60,29 @@ import { initializeApp } from
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
 import {
-  getAuth,
-  signInWithEmailAndPassword,
-  signOut
-}
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+getAuth,
+signInWithEmailAndPassword,
+signInWithPopup,
+GoogleAuthProvider,
+signOut
+} from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import {
-  getFirestore,
-  doc,
-  getDoc,
-  updateDoc,
-  collection,
-  query,
-  where,
-  getDocs
-}
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+getFirestore,
+doc,
+getDoc,
+updateDoc
+} from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
-  authDomain: "login-65d4b.firebaseapp.com",
-  projectId: "login-65d4b",
-  storageBucket: "login-65d4b.appspot.com",
-  messagingSenderId: "239979806578",
-  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
+apiKey:"AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
+authDomain:"login-65d4b.firebaseapp.com",
+projectId:"login-65d4b",
+storageBucket:"login-65d4b.appspot.com",
+messagingSenderId:"239979806578",
+appId:"1:239979806578:web:65db25b7e975ef0f1867eb"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -99,93 +91,88 @@ const db = getFirestore(app);
 
 const error = document.getElementById("error");
 
-document.getElementById("loginForm").addEventListener("submit", async (e)=>{
-  e.preventDefault();
-  error.innerText="";
+// Email login
+loginForm.addEventListener("submit", async (e)=>{
+e.preventDefault();
+error.innerText="";
 
-  const selectedRole =
-    document.querySelector('input[name="role"]:checked').value;
+const role =
+document.querySelector('input[name="role"]:checked').value;
 
-  const emailValue = document.getElementById("email").value.trim();
-  const passwordValue = document.getElementById("password").value;
+try{
 
-  try{
+const userCred = await signInWithEmailAndPassword(
+auth,email.value.trim(),password.value
+);
 
-    const userCred = await signInWithEmailAndPassword(
-      auth,emailValue,passwordValue
-    );
+await handleLogin(userCred.user,role);
 
-    const user = userCred.user;
-    const userRef = doc(db,"users",user.uid);
-    const userSnap = await getDoc(userRef);
-
-    if(!userSnap.exists()){
-      error.innerText="User record missing.";
-      await signOut(auth);
-      return;
-    }
-
-    const data = userSnap.data();
-
-    // Account lock check
-    if(data.locked === true){
-      error.innerText="Account locked. Contact admin.";
-      await signOut(auth);
-      return;
-    }
-
-    // Role mismatch
-    if(data.role !== selectedRole){
-      error.innerText="Registered as "+data.role;
-      await signOut(auth);
-      return;
-    }
-
-    // Reset failed attempts
-    await updateDoc(userRef,{ failedAttempts:0 });
-
-    // Teacher approval check
-    if(data.role === "teacher"){
-      if(data.approved !== true){
-        error.innerText="Waiting for admin approval.";
-        await signOut(auth);
-        return;
-      }
-      window.location.replace("teacher-dashboard.html");
-    } else {
-      window.location.replace("dashboard.html");
-    }
-
-  }catch(err){
-
-    const q = query(collection(db,"users"),where("email","==",emailValue));
-    const snap = await getDocs(q);
-
-    snap.forEach(async (docSnap)=>{
-      const userRef = doc(db,"users",docSnap.id);
-      const data = docSnap.data();
-      const attempts = (data.failedAttempts || 0) + 1;
-
-      if(attempts >= 3){
-        await updateDoc(userRef,{
-          failedAttempts:attempts,
-          locked:true
-        });
-        error.innerText="Account locked after 3 failed attempts.";
-      }else{
-        await updateDoc(userRef,{
-          failedAttempts:attempts
-        });
-        error.innerText="Invalid credentials.";
-      }
-    });
-
-  }
+}catch(err){
+error.innerText=err.message;
+}
 
 });
 
-</script>
+// Google login
+const provider = new GoogleAuthProvider();
 
+googleLogin.addEventListener("click", async ()=>{
+error.innerText="";
+const role =
+document.querySelector('input[name="role"]:checked').value;
+
+try{
+
+const result = await signInWithPopup(auth,provider);
+await handleLogin(result.user,role);
+
+}catch(err){
+error.innerText=err.message;
+}
+});
+
+async function handleLogin(user,selectedRole){
+
+const snap = await getDoc(doc(db,"users",user.uid));
+
+if(!snap.exists()){
+error.innerText="User data missing.";
+await signOut(auth);
+return;
+}
+
+const data = snap.data();
+
+if(data.locked === true){
+error.innerText="Account locked.";
+await signOut(auth);
+return;
+}
+
+if(data.role !== selectedRole){
+error.innerText="Registered as "+data.role;
+await signOut(auth);
+return;
+}
+
+if(data.role==="teacher" && data.approved!==true){
+error.innerText="Waiting for admin approval.";
+await signOut(auth);
+return;
+}
+
+await updateDoc(doc(db,"users",user.uid),{
+failedAttempts:0
+});
+
+window.location.replace(
+data.role==="teacher"
+? "teacher-dashboard.html"
+: "dashboard.html"
+);
+
+}
+
+</script>
 </body>
 </html>
-
