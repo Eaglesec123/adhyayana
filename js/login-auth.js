@@ -8,7 +8,7 @@ import {
   signInWithPopup,
   signOut,
   setPersistence,
-  browserLocalPersistence   // ✅ CHANGED HERE
+  browserSessionPersistence   // ✅ CHANGED HERE
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -142,3 +142,4 @@ googleBtn.addEventListener("click", async ()=>{
   }
 
 });
+
