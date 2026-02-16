@@ -21,8 +21,6 @@ h2{margin-bottom:30px;font-size:28px;font-weight:800;}
 .cart-item img{width:170px;height:110px;object-fit:cover;border-radius:12px;}
 .item-details{flex:1;}
 .price{font-weight:700;margin:8px 0;font-size:16px;}
-.qty-box{display:flex;align-items:center;gap:10px;margin-top:10px;}
-.qty-box button{width:32px;height:32px;border:none;background:#e2e8f0;font-weight:800;cursor:pointer;border-radius:8px;}
 .remove-btn{margin-top:12px;background:#ef4444;border:none;padding:8px 14px;color:white;border-radius:8px;cursor:pointer;}
 .summary{background:white;padding:30px;border-radius:20px;box-shadow:0 15px 40px rgba(0,0,0,0.06);position:sticky;top:40px;height:fit-content;}
 .checkout-btn{width:100%;padding:16px;background:linear-gradient(90deg,#16a34a,#15803d);border:none;border-radius:12px;color:white;font-weight:700;cursor:pointer;margin-top:20px;font-size:16px;}
@@ -57,7 +55,6 @@ import {
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-
 /* ================= FIREBASE CONFIG ================= */
 
 const firebaseConfig = {
@@ -77,30 +74,27 @@ let firebaseUser = null;
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 const main = document.getElementById("main");
 
-
-/* ================= AUTH PERSISTENCE FIX ================= */
+/* ================= FIX LOGIN PERSISTENCE ================= */
 
 await setPersistence(auth, browserLocalPersistence);
-
 
 /* ================= AUTH CHECK ================= */
 
 onAuthStateChanged(auth, (user) => {
 
-  if (user) {
+  if(user){
     firebaseUser = user;
     renderCart();
-  } else {
+  }else{
     setTimeout(() => {
-      if (!auth.currentUser) {
+      if(!auth.currentUser){
         alert("Login first");
-        window.location = "login.html";
+        window.location="login.html";
       }
-    }, 1200);
+    },1200);
   }
 
 });
-
 
 /* ================= RENDER CART ================= */
 
@@ -122,11 +116,8 @@ async function renderCart(){
   }
 
   let total = 0;
-
-  let html = `
-    <div class="container">
-      <div class="cart-card">
-  `;
+  let html = `<div class="container">
+                <div class="cart-card">`;
 
   for(let item of cart){
 
@@ -150,24 +141,21 @@ async function renderCart(){
     `;
   }
 
-  html += `
-      </div>
+  html += `</div>
 
-      <div class="summary">
-        <h3>Order Summary</h3>
-        <p style="margin-top:15px;font-weight:600;">
-          Total: ₹${total}
-        </p>
-        <button class="checkout-btn" onclick="checkout(${total})">
-          Proceed to Checkout
-        </button>
-      </div>
-    </div>
-  `;
+          <div class="summary">
+            <h3>Order Summary</h3>
+            <p style="margin-top:15px;font-weight:600;">
+              Total: ₹${total}
+            </p>
+            <button class="checkout-btn" onclick="checkout(${total})">
+              Proceed to Checkout
+            </button>
+          </div>
+        </div>`;
 
   main.innerHTML = html;
 }
-
 
 /* ================= REMOVE ITEM ================= */
 
@@ -176,7 +164,6 @@ window.removeItem = function(id){
   localStorage.setItem("cart", JSON.stringify(cart));
   renderCart();
 }
-
 
 /* ================= CHECKOUT ================= */
 
@@ -239,13 +226,10 @@ window.checkout = async function(total){
   }catch(err){
     alert("Payment server error");
   }
+
 }
 
 </script>
 
 </body>
 </html>
-
-
-
-
