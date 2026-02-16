@@ -32,10 +32,17 @@ const db = getFirestore(app);
 
 const form = document.getElementById("loginForm");
 const googleBtn = document.getElementById("googleLogin");
+const errorMessage = document.getElementById("errorMessage");
 
-/* EMAIL LOGIN */
+
+/* =========================
+   EMAIL LOGIN
+========================= */
+
 form.addEventListener("submit", async (e)=>{
   e.preventDefault();
+
+  errorMessage.textContent = "";
 
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -49,7 +56,7 @@ form.addEventListener("submit", async (e)=>{
 
     if(!snap.exists()){
       await signOut(auth);
-      alert("User role not found.");
+      errorMessage.textContent = "User role not found.";
       return;
     }
 
@@ -57,22 +64,32 @@ form.addEventListener("submit", async (e)=>{
 
     if(realRole !== selectedRole){
       await signOut(auth);
-      alert("Access denied. You are registered as " + realRole);
+      errorMessage.textContent = 
+        "Access denied. You are registered as " + realRole;
       return;
     }
 
-    // Save role in session (important)
+    // Save role in session
     sessionStorage.setItem("role", realRole);
 
     window.location.href = "dashboard.html";
 
   } catch(err){
-    alert(err.message);
+    errorMessage.textContent = err.message;
   }
 });
 
-/* GOOGLE LOGIN */
+
+/* =========================
+   GOOGLE LOGIN
+========================= */
+
 googleBtn.addEventListener("click", async ()=>{
+
+  errorMessage.textContent = "";
+
+  const selectedRole = document.getElementById("loginRole").value;
+
   try {
 
     const provider = new GoogleAuthProvider();
@@ -82,15 +99,26 @@ googleBtn.addEventListener("click", async ()=>{
 
     if(!snap.exists()){
       await signOut(auth);
-      alert("User role not found.");
+      errorMessage.textContent = "User role not found.";
       return;
     }
 
-    sessionStorage.setItem("role", snap.data().role);
+    const realRole = snap.data().role;
+
+    // 🔥 ROLE CHECK (FIXED)
+    if(realRole !== selectedRole){
+      await signOut(auth);
+      errorMessage.textContent = 
+        "Access denied. You are registered as " + realRole;
+      return;
+    }
+
+    sessionStorage.setItem("role", realRole);
 
     window.location.href = "dashboard.html";
 
   } catch(err){
-    alert(err.message);
+    errorMessage.textContent = err.message;
   }
+
 });
