@@ -96,7 +96,7 @@ body{
   margin-bottom:10px;
 }
 
-/* ===== Animated Toggle Switch ===== */
+/* Animated Toggle */
 
 .switch{
   position:relative;
@@ -113,10 +113,7 @@ body{
 .slider{
   position:absolute;
   cursor:pointer;
-  top:0;
-  left:0;
-  right:0;
-  bottom:0;
+  top:0;left:0;right:0;bottom:0;
   background-color:#64748b;
   transition:.4s;
   border-radius:34px;
@@ -124,10 +121,8 @@ body{
 .slider:before{
   position:absolute;
   content:"";
-  height:20px;
-  width:20px;
-  left:3px;
-  bottom:3px;
+  height:20px;width:20px;
+  left:3px;bottom:3px;
   background:white;
   transition:.4s;
   border-radius:50%;
@@ -139,32 +134,21 @@ input:checked + .slider:before{
   transform:translateX(24px);
 }
 
-/* COURSE */
-
 .course-grid{
   display:none;
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
   gap:25px;
 }
+
 .course-card{
   background:#1e293b;
   padding:20px;
   border-radius:15px;
   transition:.3s;
 }
+
 .course-card:hover{
   transform:translateY(-6px);
-}
-
-.delete-btn{
-  margin-top:10px;
-  padding:8px;
-  width:100%;
-  border:none;
-  border-radius:8px;
-  background:#ef4444;
-  color:white;
-  cursor:pointer;
 }
 </style>
 </head>
@@ -175,9 +159,7 @@ input:checked + .slider:before{
   <div class="logo">👨‍🏫 Teacher Panel</div>
   <a href="admin-analytics.html" class="nav-link">Dashboard</a>
   <a href="profile.html" class="nav-link">Profile</a>
-  <button class="upload-btn" onclick="window.location='add-course.html'">
-    ➕ Upload Course
-  </button>
+  <button class="upload-btn" onclick="window.location='add-course.html'">➕ Upload Course</button>
 </div>
 
 <div class="main">
@@ -189,22 +171,18 @@ input:checked + .slider:before{
     <div class="stat-number" id="totalCourses">0</div>
     <div>Total Courses</div>
   </div>
-
   <div class="stat-card">
     <div class="stat-number" id="totalRevenue">₹0</div>
     <div>Total Course Value</div>
   </div>
-
   <div class="stat-card">
     <div class="stat-number" id="teacherRevenue">₹0</div>
     <div>Total Earnings (80%)</div>
   </div>
-
   <div class="stat-card">
     <div class="stat-number" id="companyRevenue">₹0</div>
     <div>Platform Share (20%)</div>
   </div>
-
   <div class="stat-card">
     <div class="stat-number" id="availableBalance">₹0</div>
     <div>Available Balance</div>
@@ -218,13 +196,9 @@ input:checked + .slider:before{
 style="width:100%;padding:10px;border-radius:10px;border:none;margin-bottom:15px;">
 <div style="margin-bottom:15px;text-align:left;">
 <label><input type="radio" name="withdrawType" value="manual" checked> Manual</label>
-&nbsp;&nbsp;
-<label><input type="radio" name="withdrawType" value="automatic"> Automatic</label>
+<label style="margin-left:15px;"><input type="radio" name="withdrawType" value="automatic"> Automatic</label>
 </div>
-<button id="withdrawBtn"
-style="padding:10px;width:100%;border:none;border-radius:10px;background:linear-gradient(90deg,#f59e0b,#d97706);color:white;font-weight:600;cursor:pointer;">
-Withdraw Now
-</button>
+<button id="withdrawBtn" style="padding:10px;width:100%;border:none;border-radius:10px;background:linear-gradient(90deg,#f59e0b,#d97706);color:white;font-weight:600;">Withdraw Now</button>
 <p style="font-size:12px;margin-top:10px;color:#94a3b8;">Minimum Withdraw: ₹100</p>
 </div>
 
@@ -262,16 +236,15 @@ loadRevenue(user.uid);
 loadWithdrawHistory(user.uid);
 });
 
-/* LOAD COURSES WITH ANIMATED TOGGLE */
+/* COURSE LOAD WITH TOGGLE DELETE */
 async function loadCourses(uid){
-const q=query(collection(db,"courses"),where("creatorId","==",uid));
-const snapshot=await getDocs(q);
+const snapshot=await getDocs(query(collection(db,"courses"),where("creatorId","==",uid)));
 const container=document.getElementById("courseContainer");
 container.innerHTML="";
-let totalCourses=0;
+let total=0;
 
 snapshot.forEach(docSnap=>{
-totalCourses++;
+total++;
 const course=docSnap.data();
 const status=course.status?course.status:"active";
 
@@ -281,31 +254,36 @@ container.innerHTML+=`
 <p>₹ ${course.price}</p>
 
 <label class="switch">
-<input type="checkbox" ${status==="active"?"checked":""}
-onchange="toggleCourseStatus('${docSnap.id}',this.checked)">
+<input type="checkbox"
+${status==="active"?"checked":""}
+onchange="toggleCourse('${docSnap.id}','${status}')">
 <span class="slider"></span>
 </label>
 <p style="font-size:12px;margin-top:6px;">
-${status==="active"?"Active":"Inactive"}
+${status==="active"?"Active":"Inactive (Toggle again to delete)"}
 </p>
-
-<button class="delete-btn" onclick="deleteCourse('${docSnap.id}')">Delete</button>
 </div>
 `;
 });
 
-document.getElementById("totalCourses").innerText=totalCourses;
+document.getElementById("totalCourses").innerText=total;
 }
 
-window.toggleCourseStatus=async function(id,isChecked){
-await updateDoc(doc(db,"courses",id),{status:isChecked?"active":"inactive"});
+window.toggleCourse=async function(id,status){
+if(status==="active"){
+await updateDoc(doc(db,"courses",id),{status:"inactive"});
+}else{
+if(confirm("Delete this course permanently?")){
+await deleteDoc(doc(db,"courses",id));
+}
+}
 loadCourses(auth.currentUser.uid);
 };
 
+/* REVENUE */
 async function loadRevenue(uid){
 const purchaseSnap=await getDocs(query(collection(db,"purchases"),where("teacherId","==",uid)));
 let totalRevenue=0,teacherRevenue=0,companyRevenue=0;
-
 purchaseSnap.forEach(d=>{
 const data=d.data();
 totalRevenue+=data.amount;
@@ -318,10 +296,10 @@ where("teacherId","==",uid),
 where("status","in",["pending","processing"])
 ));
 
-let pendingAmount=0;
-withdrawSnap.forEach(d=>{pendingAmount+=d.data().amount;});
+let pending=0;
+withdrawSnap.forEach(d=>pending+=d.data().amount);
 
-currentBalance=teacherRevenue-pendingAmount;
+currentBalance=teacherRevenue-pending;
 
 document.getElementById("totalRevenue").innerText="₹"+totalRevenue;
 document.getElementById("teacherRevenue").innerText="₹"+teacherRevenue;
@@ -329,22 +307,46 @@ document.getElementById("companyRevenue").innerText="₹"+companyRevenue;
 document.getElementById("availableBalance").innerText="₹"+currentBalance;
 }
 
+/* WITHDRAW HISTORY WITH TOGGLE CANCEL */
 async function loadWithdrawHistory(uid){
 const snapshot=await getDocs(query(collection(db,"withdrawRequests"),where("teacherId","==",uid)));
 const container=document.getElementById("withdrawHistory");
 container.innerHTML="";
 snapshot.forEach(docSnap=>{
 const data=docSnap.data();
+const status=data.status;
 container.innerHTML+=`
 <div class="stat-card" style="margin-bottom:15px;">
 <strong>₹${data.amount}</strong><br>
-Status: ${data.status}<br>
-Type: ${data.type}
+Status: ${status}<br>
+Type: ${data.type}<br>
+
+<label class="switch">
+<input type="checkbox"
+${status==="pending"?"checked":""}
+${status!=="pending"?"disabled":""}
+onchange="toggleWithdraw('${docSnap.id}','${status}')">
+<span class="slider"></span>
+</label>
+<p style="font-size:12px;">
+${status==="pending"?"Pending (Toggle to Cancel)":status}
+</p>
 </div>
 `;
 });
 }
 
+window.toggleWithdraw=async function(id,status){
+if(status==="pending"){
+if(confirm("Cancel this withdraw request?")){
+await deleteDoc(doc(db,"withdrawRequests",id));
+}
+loadWithdrawHistory(auth.currentUser.uid);
+loadRevenue(auth.currentUser.uid);
+}
+};
+
+/* WITHDRAW REQUEST */
 document.getElementById("withdrawBtn").addEventListener("click",async()=>{
 const user=auth.currentUser;
 const amount=Number(document.getElementById("withdrawAmount").value);
@@ -371,12 +373,6 @@ el.style.display=el.style.display==="none"?"block":"none";
 window.toggleCourses=()=>{
 const el=document.getElementById("courseContainer");
 el.style.display=el.style.display==="none"?"grid":"none";
-};
-
-window.deleteCourse=async function(id){
-if(!confirm("Delete this course?")) return;
-await deleteDoc(doc(db,"courses",id));
-loadCourses(auth.currentUser.uid);
 };
 </script>
 
