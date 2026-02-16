@@ -25,24 +25,19 @@
 
     <form id="signupForm">
 
-      <!-- ROLE SELECTION -->
+      <!-- ROLE -->
       <div style="display:flex; gap:15px; margin-bottom:15px;">
         <label>
           <input type="radio" name="role" value="student" checked> Student
         </label>
-
         <label>
           <input type="radio" name="role" value="teacher"> Teacher
         </label>
       </div>
 
-      <!-- NAME -->
       <input type="text" id="signupName" placeholder="Full Name" required>
-
-      <!-- EMAIL -->
       <input type="email" id="signupEmail" placeholder="Email Address" required>
 
-      <!-- PASSWORD -->
       <div class="password-field">
         <input type="password" id="signupPassword" placeholder="Password" required>
         <span class="toggle-password" id="toggleSignupPassword">👁</span>
@@ -56,7 +51,6 @@
 
     <div class="divider">OR</div>
 
-    <!-- GOOGLE SIGNUP -->
     <button id="googleSignup" class="google-btn" type="button">
       <img src="images/google.png" alt="Google">
       <span>Continue with Google</span>
@@ -91,7 +85,8 @@ from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getFirestore,
   doc,
-  setDoc
+  setDoc,
+  getDoc
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -107,7 +102,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
 const error = document.getElementById("error");
 
 /* EMAIL SIGNUP */
@@ -124,10 +118,7 @@ signupForm.addEventListener("submit", async (e)=>{
       signupPassword.value
     );
 
-    const user = userCred.user;
-
-    /* SAVE ROLE SECURELY */
-    await setDoc(doc(db,"users",user.uid),{
+    await setDoc(doc(db,"users",userCred.user.uid),{
       name: signupName.value,
       email: signupEmail.value,
       role: role,
@@ -145,29 +136,35 @@ signupForm.addEventListener("submit", async (e)=>{
 const provider = new GoogleAuthProvider();
 
 googleSignup.addEventListener("click", async ()=>{
+  error.innerText="";
   try{
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
-
     const role = document.querySelector('input[name="role"]:checked').value;
 
-    await setDoc(doc(db,"users",user.uid),{
-      name: user.displayName,
-      email: user.email,
-      role: role,
-      createdAt: new Date()
+    const userRef = doc(db,"users",user.uid);
+    const userDoc = await getDoc(userRef);
+
+    if(userDoc.exists()){
+      error.innerText="Account already exists as "+userDoc.data().role;
+      return;
+    }
+
+    await setDoc(userRef,{
+      name:user.displayName,
+      email:user.email,
+      role:role,
+      createdAt:new Date()
     });
 
     window.location.replace("dashboard.html");
 
   }catch(err){
-    error.innerText = err.message;
+    error.innerText=err.message;
   }
 });
 
 </script>
-
 <script src="js/password-toggle.js"></script>
-
 </body>
 </html>
