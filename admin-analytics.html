@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admin Analysis | Adhyayana</title>
+<title>Admin Dashboard | Adhyayana</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -31,9 +31,7 @@ body{
   background:#1f2937;
   border-radius:8px;
   color:white;
-  text-decoration:none;
   cursor:pointer;
-  transition:.3s;
 }
 .sidebar a:hover{background:#6366f1}
 
@@ -46,139 +44,57 @@ body{
 .section{display:none}
 .section.active{display:block}
 
-/* STATS */
-.stats{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  gap:20px;
+/* UPLOAD CARD */
+.upload-card{
+  max-width:600px;
+  background:#1f2937;
+  padding:30px;
+  border-radius:15px;
   margin-bottom:30px;
 }
-.card{
-  background:#1f2937;
-  padding:20px;
-  border-radius:10px;
-}
-.big{
-  font-size:24px;
-  font-weight:700;
-}
-
-/* UPLOAD CARD */
-.upload-wrapper{
-  display:flex;
-  justify-content:center;
-  margin-top:30px;
-}
-.upload-card{
-  width:450px;
-  background:rgba(255,255,255,.05);
-  backdrop-filter:blur(20px);
-  padding:35px;
-  border-radius:20px;
-  box-shadow:0 30px 60px rgba(0,0,0,.4);
-  animation:fadeInUp .6s ease;
-  transition:.4s;
-}
-.upload-card:hover{transform:translateY(-10px)}
-
-.upload-card h2{margin-bottom:20px}
-
-.input-group{
-  position:relative;
-  margin-bottom:18px;
-}
-.input-group input,
-.input-group textarea{
+.upload-card input,
+.upload-card textarea{
   width:100%;
-  padding:12px;
-  background:#1f2937;
-  border:none;
-  border-radius:8px;
-  color:white;
-}
-.input-group label{
-  position:absolute;
-  left:12px;
-  top:12px;
-  opacity:.7;
-  transition:.3s;
-}
-.input-group input:focus + label,
-.input-group input:valid + label,
-.input-group textarea:focus + label,
-.input-group textarea:valid + label{
-  top:-10px;
-  left:8px;
-  font-size:12px;
-  background:#0f172a;
-  padding:0 4px;
-  color:#6366f1;
-}
-
-.file-group{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.file-group button{
-  padding:10px 14px;
-  border:none;
-  background:#6366f1;
-  border-radius:8px;
-  color:white;
-  cursor:pointer;
-}
-#fileName{font-size:13px; opacity:.7}
-
-.upload-btn{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:10px;
-  background:linear-gradient(90deg,#6366f1,#22c55e);
-  color:white;
-  font-weight:600;
-  cursor:pointer;
-  transition:.3s;
-}
-.upload-btn:hover{transform:scale(1.05)}
-
-.upload-progress{
-  height:6px;
-  background:#1f2937;
+  padding:10px;
+  margin:10px 0;
   border-radius:6px;
-  overflow:hidden;
+  border:none;
+}
+
+.preview-img{
+  width:100%;
+  height:180px;
+  object-fit:cover;
+  border-radius:8px;
   margin-top:10px;
 }
-.upload-bar{
+
+.preview-video{
+  width:100%;
+  margin-top:10px;
+  border-radius:8px;
+}
+
+.progress{
+  height:6px;
+  background:#0f172a;
+  border-radius:6px;
+  margin-top:8px;
+}
+.bar{
   height:100%;
   width:0%;
   background:#22c55e;
   transition:.3s;
 }
 
-/* COURSES */
-.course-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:20px;
-  margin-top:30px;
-}
-.course-card{
-  background:#1f2937;
-  border-radius:10px;
-  overflow:hidden;
-}
-.course-card img{
-  width:100%;
-  height:140px;
-  object-fit:cover;
-}
-.course-card div{padding:15px}
-
-@keyframes fadeInUp{
-  from{opacity:0; transform:translateY(30px)}
-  to{opacity:1; transform:translateY(0)}
+button{
+  padding:10px 15px;
+  background:#6366f1;
+  border:none;
+  color:white;
+  border-radius:6px;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -186,78 +102,35 @@ body{
 <body>
 
 <div class="sidebar">
-  <a onclick="switchSection('analysis')">📊 Analysis</a>
-  <a onclick="switchSection('courses')">📚 Add Courses</a>
+  <a onclick="switchSection('courses')">📚 Upload Course</a>
 </div>
 
 <div class="main">
 
-<!-- ANALYSIS -->
-<div id="analysis" class="section active">
+<div id="courses" class="section active">
 
-<h2>Admin Analysis</h2>
+<h2>Upload Course (Image + Video)</h2>
 
-<div class="stats">
-  <div class="card">
-    <div>Total Revenue</div>
-    <div id="totalRevenue" class="big">₹0</div>
-  </div>
-  <div class="card">
-    <div>Earnings</div>
-    <div id="teacherRevenue" class="big">₹0</div>
-  </div>
-  <div class="card">
-    <div>Available</div>
-    <div id="availableBalance" class="big">₹0</div>
-  </div>
+<div class="upload-card">
+
+<input type="text" id="courseTitle" placeholder="Course Title">
+<input type="number" id="coursePrice" placeholder="Course Price">
+
+<label>Thumbnail Image</label>
+<input type="file" id="thumbFile" accept="image/*">
+<img id="thumbPreview" class="preview-img" style="display:none;">
+<div class="progress"><div id="thumbBar" class="bar"></div></div>
+
+<label>Course Video</label>
+<input type="file" id="videoFile" accept="video/*">
+<video id="videoPreview" controls class="preview-video" style="display:none;"></video>
+<div class="progress"><div id="videoBar" class="bar"></div></div>
+
+<textarea id="courseDesc" placeholder="Course Description"></textarea>
+
+<button onclick="uploadCourse()">Upload Course</button>
+
 </div>
-
-<canvas id="revenueChart"></canvas>
-
-</div>
-
-
-<!-- COURSES -->
-<div id="courses" class="section">
-
-<div class="upload-wrapper">
-  <div class="upload-card">
-    <h2>🚀 Create Course</h2>
-
-    <div class="input-group">
-      <input type="text" id="courseTitle" required>
-      <label>Course Title</label>
-    </div>
-
-    <div class="input-group">
-      <input type="number" id="coursePrice" required>
-      <label>Course Price</label>
-    </div>
-
-    <div class="input-group file-group">
-      <input type="file" id="courseImage" hidden>
-      <button type="button" onclick="document.getElementById('courseImage').click()">
-        Choose Thumbnail
-      </button>
-      <span id="fileName">No file selected</span>
-    </div>
-
-    <div class="input-group">
-      <textarea id="courseDesc" rows="3" required></textarea>
-      <label>Description</label>
-    </div>
-
-    <div class="upload-progress">
-      <div class="upload-bar" id="uploadBar"></div>
-    </div>
-
-    <button onclick="uploadCourse()" class="upload-btn">
-      Publish Course
-    </button>
-  </div>
-</div>
-
-<div class="course-grid" id="courseGrid"></div>
 
 </div>
 
@@ -268,21 +141,22 @@ body{
 import { initializeApp } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
-import { getAuth, onAuthStateChanged } from 
+import { getAuth } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-import { getFirestore, collection, addDoc, query, where, onSnapshot }
+import { getFirestore, collection, addDoc } 
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 import { getStorage, ref, uploadBytesResumable, getDownloadURL }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
 
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_DOMAIN",
   projectId: "YOUR_PROJECT",
   storageBucket: "YOUR_BUCKET.appspot.com",
-  messagingSenderId: "YOUR_MSG_ID",
+  messagingSenderId: "YOUR_ID",
   appId: "YOUR_APP_ID"
 };
 
@@ -291,101 +165,82 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-/* Switch */
-window.switchSection = function(id){
-  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-}
-
-/* File name display */
-document.getElementById("courseImage").addEventListener("change", function(){
-  document.getElementById("fileName").innerText =
-    this.files[0]?.name || "No file selected";
-});
-
-/* Chart */
-const chart = new Chart(document.getElementById("revenueChart"),{
-  type:'line',
-  data:{
-    labels:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
-    datasets:[{label:"Revenue",data:new Array(12).fill(0),borderColor:"#6366f1"}]
+/* Preview Thumbnail */
+document.getElementById("thumbFile").addEventListener("change", function(){
+  const file=this.files[0];
+  if(file){
+    const reader=new FileReader();
+    reader.onload=function(e){
+      const img=document.getElementById("thumbPreview");
+      img.src=e.target.result;
+      img.style.display="block";
+    }
+    reader.readAsDataURL(file);
   }
 });
 
-/* Auth */
-onAuthStateChanged(auth,(user)=>{
-  if(!user) return;
-
-  const q=query(collection(db,"purchases"),where("teacherId","==",user.uid));
-
-  onSnapshot(q,(snap)=>{
-    let total=0;
-    let monthly=new Array(12).fill(0);
-
-    snap.forEach(doc=>{
-      const d=doc.data();
-      total+=d.amount;
-      const month=new Date(d.createdAt?.seconds*1000||Date.now()).getMonth();
-      monthly[month]+=d.amount;
-    });
-
-    document.getElementById("totalRevenue").innerText="₹"+total;
-    document.getElementById("teacherRevenue").innerText="₹"+(total*0.8);
-    document.getElementById("availableBalance").innerText="₹"+(total*0.7);
-
-    chart.data.datasets[0].data=monthly;
-    chart.update();
-  });
-
-  const cq=query(collection(db,"courses"),where("creatorId","==",user.uid));
-  onSnapshot(cq,(snap)=>{
-    const grid=document.getElementById("courseGrid");
-    grid.innerHTML="";
-    snap.forEach(doc=>{
-      const c=doc.data();
-      grid.innerHTML+=`
-        <div class="course-card">
-          <img src="${c.thumbnail}">
-          <div>
-            <h4>${c.title}</h4>
-            <p>₹${c.price}</p>
-          </div>
-        </div>`;
-    });
-  });
+/* Preview Video */
+document.getElementById("videoFile").addEventListener("change", function(){
+  const file=this.files[0];
+  if(file){
+    const video=document.getElementById("videoPreview");
+    video.src=URL.createObjectURL(file);
+    video.style.display="block";
+  }
 });
 
-/* Upload */
-window.uploadCourse = function(){
+window.uploadCourse = async function(){
 
   const title=document.getElementById("courseTitle").value;
   const price=document.getElementById("coursePrice").value;
-  const file=document.getElementById("courseImage").files[0];
+  const thumb=document.getElementById("thumbFile").files[0];
+  const video=document.getElementById("videoFile").files[0];
   const desc=document.getElementById("courseDesc").value;
 
-  if(!title||!price||!file) return alert("Fill fields");
+  if(!title || !price || !thumb || !video){
+    return alert("Fill all fields");
+  }
 
-  const storageRef=ref(storage,'courses/'+Date.now()+"_"+file.name);
-  const uploadTask=uploadBytesResumable(storageRef,file);
+  /* Upload Thumbnail */
+  const thumbRef=ref(storage,'thumbnails/'+Date.now()+thumb.name);
+  const thumbTask=uploadBytesResumable(thumbRef,thumb);
 
-  uploadTask.on('state_changed',(snapshot)=>{
-    const progress=(snapshot.bytesTransferred/snapshot.totalBytes)*100;
-    document.getElementById("uploadBar").style.width=progress+"%";
+  thumbTask.on('state_changed',(snap)=>{
+    const progress=(snap.bytesTransferred/snap.totalBytes)*100;
+    document.getElementById("thumbBar").style.width=progress+"%";
   },null,async()=>{
-    const url=await getDownloadURL(uploadTask.snapshot.ref);
 
-    await addDoc(collection(db,"courses"),{
-      title,
-      price:Number(price),
-      thumbnail:url,
-      description:desc,
-      creatorId:auth.currentUser.uid,
-      createdAt:new Date()
+    const thumbURL=await getDownloadURL(thumbTask.snapshot.ref);
+
+    /* Upload Video */
+    const videoRef=ref(storage,'videos/'+Date.now()+video.name);
+    const videoTask=uploadBytesResumable(videoRef,video);
+
+    videoTask.on('state_changed',(snap)=>{
+      const progress=(snap.bytesTransferred/snap.totalBytes)*100;
+      document.getElementById("videoBar").style.width=progress+"%";
+    },null,async()=>{
+
+      const videoURL=await getDownloadURL(videoTask.snapshot.ref);
+
+      await addDoc(collection(db,"courses"),{
+        title,
+        price:Number(price),
+        thumbnail:thumbURL,
+        videoURL:videoURL,
+        description:desc,
+        createdAt:new Date()
+      });
+
+      alert("Course Uploaded Successfully 🚀");
+
+      document.getElementById("thumbBar").style.width="0%";
+      document.getElementById("videoBar").style.width="0%";
+
     });
 
-    document.getElementById("uploadBar").style.width="0%";
-    alert("Course Published 🚀");
   });
+
 };
 
 </script>
