@@ -21,41 +21,7 @@ body{
   justify-content:center;
   align-items:center;
   height:100vh;
-  overflow:hidden;
-  position:relative;
 }
-
-/* 📖 BOOK PAGE TURN ANIMATION */
-
-.book{
-  position:absolute;
-  width:220px;
-  height:220px;
-  background:white;
-  border-radius:6px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.3);
-  top:20%;
-  left:8%;
-  animation:pageTurn 6s infinite ease-in-out;
-  transform-origin:left;
-  opacity:0.15;
-}
-
-.book:before{
-  content:"📖";
-  font-size:120px;
-  position:absolute;
-  top:30px;
-  left:50px;
-}
-
-@keyframes pageTurn{
-  0%{transform:rotateY(0deg);}
-  50%{transform:rotateY(-180deg);}
-  100%{transform:rotateY(0deg);}
-}
-
-/* EXISTING UI */
 
 .container{
   background:white;
@@ -63,7 +29,6 @@ body{
   padding:30px;
   border-radius:18px;
   box-shadow:0 20px 40px rgba(0,0,0,0.2);
-  z-index:2;
 }
 
 h2{
@@ -99,7 +64,6 @@ button{
 
 button:hover{
   background:#5563d1;
-  transform:translateY(-3px);
 }
 
 .message{
@@ -108,7 +72,7 @@ button:hover{
   font-weight:600;
 }
 
-/* MOBILE FIX */
+/* Mobile Fix */
 @media(max-width:480px){
   .container{
     width:90%;
@@ -118,8 +82,6 @@ button:hover{
 </head>
 
 <body>
-
-<div class="book"></div>
 
 <div class="container">
   <h2>📚 Add New Course</h2>
@@ -138,7 +100,12 @@ button:hover{
 import { initializeApp } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
-import { getAuth, onAuthStateChanged } from 
+import { 
+  getAuth, 
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence
+} from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import { 
@@ -150,7 +117,7 @@ import {
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR_FIREBASE_KEY",
+  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
   authDomain: "login-65d4b.firebaseapp.com",
   projectId: "login-65d4b",
   storageBucket: "login-65d4b.appspot.com",
@@ -162,30 +129,40 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* AUTH + ROLE CHECK */
+/* ✅ Ensure login persists across pages */
+await setPersistence(auth, browserLocalPersistence);
 
-onAuthStateChanged(auth, async (user)=>{
+/* =========================
+   AUTH + ROLE CHECK FIXED
+========================= */
 
-  if(!user){
+onAuthStateChanged(auth, (user)=>{
+
+  if(user){
+
+    const role = localStorage.getItem("role");
+
+    if(role !== "teacher"){
+      alert("Access denied! Only teachers can upload courses.");
+      window.location="dashboard.html";
+    }
+
+  } else {
+
+    // Small delay to prevent false redirect
     setTimeout(()=>{
-      window.location="login.html";
-    },500);
-    return;
-  }
+      if(!auth.currentUser){
+        window.location="login.html";
+      }
+    },700);
 
-  // Wait for role from localStorage instead of sessionStorage
-  const role = localStorage.getItem("role");
-
-  if(role !== "teacher"){
-    alert("Access denied! Only teachers allowed.");
-    window.location="dashboard.html";
-    return;
   }
 
 });
 
-
-/* SIMPLE COURSE UPLOAD */
+/* =========================
+   COURSE UPLOAD (UNCHANGED STYLE)
+========================= */
 
 window.addCourse = async function(){
 
@@ -204,8 +181,8 @@ window.addCourse = async function(){
 
     await addDoc(collection(db,"courses"),{
       title:title,
-      description:description,
       price:Number(price),
+      description:description,
       creatorId:auth.currentUser.uid,
       isPublished:true,
       createdAt:serverTimestamp()
@@ -234,4 +211,3 @@ window.addCourse = async function(){
 
 </body>
 </html>
-
