@@ -1,73 +1,86 @@
-import { 
-  signInWithEmailAndPassword, 
-  GoogleAuthProvider, 
-  signInWithPopup, 
-  sendPasswordResetEmail
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { initializeApp } from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
-import { auth } from "./firebase.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup
+}
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
+import {
+  getFirestore,
+  doc,
+  getDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ✅ Email Login
-document.querySelector(".login-form").addEventListener("submit", async (e) => {
+const firebaseConfig = {
+  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
+  authDomain: "login-65d4b.firebaseapp.com",
+  projectId: "login-65d4b",
+  storageBucket: "login-65d4b.appspot.com",
+  messagingSenderId: "239979806578",
+  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const form = document.querySelector("#loginForm");
+const googleBtn = document.getElementById("googleLogin");
+
+/* EMAIL LOGIN */
+form.addEventListener("submit", async (e)=>{
   e.preventDefault();
 
-  const email = document.getElementById("loginEmail").value;
-  const password = document.getElementById("loginPassword").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const selectedRole = document.getElementById("loginRole").value;
 
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    saveUser(userCredential.user);
 
-    // redirect only ONCE
+    const cred = await signInWithEmailAndPassword(auth,email,password);
+    const snap = await getDoc(doc(db,"users",cred.user.uid));
+
+    if(!snap.exists()){
+      alert("User data not found.");
+      return;
+    }
+
+    if(snap.data().role !== selectedRole){
+      alert("Role mismatch. You cannot login with this role.");
+      return;
+    }
+
     window.location.replace("dashboard.html");
 
-  } catch (error) {
-    alert(error.message);
+  } catch(err){
+    alert(err.message);
   }
 });
 
+/* GOOGLE LOGIN */
+googleBtn.addEventListener("click", async ()=>{
 
-// ✅ Google Login
-const provider = new GoogleAuthProvider();
-
-document.getElementById("googleLogin").addEventListener("click", async () => {
   try {
+
+    const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
-    saveUser(result.user);
+
+    const snap = await getDoc(doc(db,"users",result.user.uid));
+
+    if(!snap.exists()){
+      alert("User role not found.");
+      return;
+    }
 
     window.location.replace("dashboard.html");
 
-  } catch (error) {
-    alert(error.message);
+  } catch(err){
+    alert(err.message);
   }
+
 });
-
-
-// ✅ Forgot Password
-document.getElementById("forgotPassword").addEventListener("click", async () => {
-  const email = document.getElementById("loginEmail").value;
-
-  if (!email) {
-    alert("Enter your email first");
-    return;
-  }
-
-  try {
-    await sendPasswordResetEmail(auth, email);
-    alert("Password reset email sent!");
-  } catch (error) {
-    alert(error.message);
-  }
-});
-
-
-// ✅ Save user in localStorage
-function saveUser(user){
-  localStorage.setItem("currentUser", JSON.stringify({
-    uid: user.uid,
-    name: user.displayName || "User",
-    photo: user.photoURL || "images/user.png",
-    email: user.email
-  }));
-}
