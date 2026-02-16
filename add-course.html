@@ -2,71 +2,60 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Upload Course</title>
+<title>Add Course</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
 <style>
-body{
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
   font-family:'Inter',sans-serif;
-  background:#0f172a;
-  color:white;
+}
+
+body{
+  background:linear-gradient(135deg,#667eea,#764ba2);
   display:flex;
   justify-content:center;
   align-items:center;
   height:100vh;
 }
 
-.card{
-  width:500px;
-  background:#1e293b;
-  padding:35px;
-  border-radius:16px;
-  box-shadow:0 15px 35px rgba(0,0,0,0.4);
-  animation:fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn{
-  from{opacity:0; transform:translateY(20px);}
-  to{opacity:1; transform:translateY(0);}
+.container{
+  background:white;
+  width:420px;
+  padding:30px;
+  border-radius:18px;
+  box-shadow:0 20px 40px rgba(0,0,0,0.2);
 }
 
 h2{
-  margin-bottom:25px;
   text-align:center;
+  margin-bottom:25px;
 }
 
 input, textarea{
   width:100%;
-  padding:12px 15px;
+  padding:12px;
   margin-bottom:15px;
-  border-radius:8px;
-  border:none;
-  outline:none;
+  border-radius:10px;
+  border:1px solid #ddd;
   font-size:14px;
 }
 
-input:focus, textarea:focus{
-  box-shadow:0 0 0 2px #3b82f6;
-}
-
-.preview{
-  width:100%;
-  height:180px;
-  object-fit:cover;
-  border-radius:10px;
-  margin-bottom:15px;
-  display:none;
-  border:2px dashed #334155;
+textarea{
+  resize:none;
+  height:100px;
 }
 
 button{
   width:100%;
   padding:12px;
   border:none;
-  border-radius:8px;
-  background:linear-gradient(90deg,#3b82f6,#6366f1);
+  border-radius:10px;
+  background:#667eea;
   color:white;
   font-weight:600;
   cursor:pointer;
@@ -74,69 +63,53 @@ button{
 }
 
 button:hover{
-  opacity:0.9;
+  background:#5563d1;
 }
 
-/* 🔥 Progress Bar */
-.progress-container{
-  margin-top:20px;
-  width:100%;
-  background:#334155;
-  border-radius:10px;
-  overflow:hidden;
-  display:none;
-}
-
-.progress-bar{
-  height:12px;
-  width:0%;
-  background:linear-gradient(90deg,#22d3ee,#3b82f6);
-  transition:width 0.3s ease;
-}
-
-.progress-text{
-  margin-top:10px;
+.message{
+  margin-top:15px;
   text-align:center;
   font-weight:600;
-  display:none;
 }
 </style>
 </head>
 
 <body>
 
-<div class="card">
-<h2>Upload Course</h2>
+<div class="container">
+  <h2>📚 Add New Course</h2>
 
-<input type="text" id="title" placeholder="Course Title">
-<input type="number" id="price" placeholder="Price">
-<textarea id="description" placeholder="Description"></textarea>
+  <input type="text" id="title" placeholder="Course Title">
+  <textarea id="description" placeholder="Course Description"></textarea>
+  <input type="number" id="price" placeholder="Course Price (₹)">
+  
+  <button onclick="addCourse()">Create Course</button>
 
-<input type="file" id="thumbnailFile" accept="image/*">
-<img id="thumbnailPreview" class="preview">
-
-<input type="file" id="videoFile" accept="video/*">
-
-<button id="uploadBtn">Upload Course</button>
-
-<div class="progress-container" id="progressContainer">
-  <div class="progress-bar" id="progressBar"></div>
+  <div class="message" id="msg"></div>
 </div>
 
-<div class="progress-text" id="progressText">0%</div>
-
-</div>
 
 <script type="module">
 
 import { initializeApp } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
-import { getAuth, onAuthStateChanged } 
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { 
+  getAuth, 
+  onAuthStateChanged 
+} from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-import { getFirestore, collection, addDoc, serverTimestamp }
-from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  serverTimestamp,
+  doc,
+  getDoc
+} from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
@@ -151,118 +124,66 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* LOGIN CHECK */
-onAuthStateChanged(auth, (user)=>{
+let currentUser;
+
+
+/* CHECK AUTH + ROLE */
+onAuthStateChanged(auth, async (user)=>{
+
   if(!user){
-    window.location="login.html";
-  }
-});
-
-/* Thumbnail Preview */
-thumbnailFile.addEventListener("change",function(){
-  const file=this.files[0];
-  if(file){
-    const reader=new FileReader();
-    reader.onload=e=>{
-      thumbnailPreview.src=e.target.result;
-      thumbnailPreview.style.display="block";
-    };
-    reader.readAsDataURL(file);
-  }
-});
-
-uploadBtn.addEventListener("click",async ()=>{
-
-  const video=videoFile.files[0];
-  const thumbnail=thumbnailFile.files[0];
-
-  if(!video || !thumbnail){
-    alert("Select thumbnail and video");
+    window.location.replace("login.html");
     return;
   }
 
-  progressContainer.style.display="block";
-  progressText.style.display="block";
-  progressText.innerText="Uploading...";
+  currentUser = user;
 
-  const thumbnailUrl=await uploadImage(thumbnail);
-  const videoUrl=await uploadVideo(video);
+  const userDoc = await getDoc(doc(db,"users",user.uid));
 
-  await addDoc(collection(db,"courses"),{
-    title:title.value,
-    price:Number(price.value),
-    description:description.value,
-    thumbnailUrl:thumbnailUrl,
-    videoUrl:videoUrl,
-    creatorId:auth.currentUser.uid,
-    isPublished:true,
-    createdAt:serverTimestamp()
-  });
-
-  progressBar.style.width="100%";
-  progressText.innerText="100% Upload Complete 🎉";
-
-  setTimeout(()=>{
-    window.location="dashboard.html";
-  },1000);
-
+  if(!userDoc.exists() || userDoc.data().role !== "teacher"){
+    alert("Access Denied! Only Teachers can add courses.");
+    window.location.replace("dashboard.html");
+  }
 });
 
-/* Upload Thumbnail */
-function uploadImage(file){
-  return new Promise((resolve,reject)=>{
-    const formData=new FormData();
-    formData.append("file",file);
-    formData.append("upload_preset","darshan");
 
-    fetch("https://api.cloudinary.com/v1_1/dlqbfsh92/image/upload",{
-      method:"POST",
-      body:formData
-    })
-    .then(res=>res.json())
-    .then(data=>resolve(data.secure_url))
-    .catch(err=>reject(err));
-  });
-}
+/* ADD COURSE */
+window.addCourse = async function(){
 
-/* Upload Video with Progress */
-function uploadVideo(file){
-  return new Promise((resolve,reject)=>{
-    const formData=new FormData();
-    formData.append("file",file);
-    formData.append("upload_preset","darshan");
+  const title = document.getElementById("title").value.trim();
+  const description = document.getElementById("description").value.trim();
+  const price = document.getElementById("price").value;
 
-    const xhr=new XMLHttpRequest();
+  if(!title || !description || !price){
+    document.getElementById("msg").innerText = "⚠ Please fill all fields";
+    document.getElementById("msg").style.color = "red";
+    return;
+  }
 
-    xhr.open(
-      "POST",
-      "https://api.cloudinary.com/v1_1/dlqbfsh92/video/upload",
-      true
-    );
+  try{
 
-    xhr.upload.onprogress=function(e){
-      if(e.lengthComputable){
-        const percent=Math.round((e.loaded/e.total)*100);
-        progressBar.style.width=percent+"%";
-        progressText.innerText=percent+"% Uploading...";
-      }
-    };
+    await addDoc(collection(db,"courses"),{
+      title: title,
+      description: description,
+      price: Number(price),
+      creatorId: currentUser.uid,
+      createdAt: serverTimestamp()
+    });
 
-    xhr.onload=()=>{
-      if(xhr.status===200){
-        const response=JSON.parse(xhr.responseText);
-        resolve(response.secure_url);
-      }else{
-        reject(xhr.responseText);
-      }
-    };
+    document.getElementById("msg").innerText = "✅ Course Created Successfully!";
+    document.getElementById("msg").style.color = "green";
 
-    xhr.onerror=()=>reject("Upload error");
+    document.getElementById("title").value = "";
+    document.getElementById("description").value = "";
+    document.getElementById("price").value = "";
 
-    xhr.send(formData);
-  });
+  }catch(error){
+    document.getElementById("msg").innerText = "❌ Error: " + error.message;
+    document.getElementById("msg").style.color = "red";
+  }
+
 }
 
 </script>
+
 </body>
 </html>
