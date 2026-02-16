@@ -41,13 +41,19 @@ Create Account
 
 <div class="divider">OR</div>
 
-<button id="googleSignup" class="google-btn" type="button">
-Continue with Google
+<button id="googleSignup" class="google-btn" type="button"
+style="display:flex;align-items:center;justify-content:center;gap:8px;">
+<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
+<span>Continue with Google</span>
 </button>
 
 <p class="auth-switch">
 Already have account?
 <a href="login.html">Login</a>
+</p>
+
+<p style="margin-top:10px;">
+<a href="index.html">← Back to Home</a>
 </p>
 
 <p id="error" style="color:red;"></p>
@@ -88,7 +94,6 @@ appId:"1:239979806578:web:65db25b7e975ef0f1867eb"
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
 const error = document.getElementById("error");
 
 signupForm.addEventListener("submit", async (e)=>{
@@ -124,29 +129,23 @@ error.innerText=err.message;
 
 });
 
-// Google Signup
 const provider = new GoogleAuthProvider();
 
 googleSignup.addEventListener("click", async ()=>{
 error.innerText="";
+const role =
+document.querySelector('input[name="role"]:checked').value;
 
 try{
 
 const result = await signInWithPopup(auth,provider);
 const user = result.user;
-const role =
-document.querySelector('input[name="role"]:checked').value;
-
 const userRef = doc(db,"users",user.uid);
 const snap = await getDoc(userRef);
 
-if(snap.exists()){
-error.innerText="Account already exists as "+snap.data().role;
-return;
-}
-
+if(!snap.exists()){
 await setDoc(userRef,{
-name:user.displayName,
+name:user.displayName || "User",
 email:user.email,
 role:role,
 approved: role==="teacher" ? false : true,
@@ -154,13 +153,13 @@ failedAttempts:0,
 locked:false,
 createdAt:new Date()
 });
+}
 
 window.location.replace("dashboard.html");
 
 }catch(err){
 error.innerText=err.message;
 }
-
 });
 
 </script>
