@@ -7,9 +7,98 @@
 
 <link rel="stylesheet" href="css/style.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+
+/* ===== 3D PREMIUM BACKGROUND ===== */
+
+.auth-body {
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-body::before {
+  content: "";
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle at center, #6366f1, transparent 70%);
+  top: -150px;
+  left: -150px;
+  filter: blur(120px);
+  animation: floatGlow 8s ease-in-out infinite alternate;
+  z-index: 0;
+}
+
+.auth-body::after {
+  content: "";
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle at center, #a855f7, transparent 70%);
+  bottom: -150px;
+  right: -150px;
+  filter: blur(120px);
+  animation: floatGlow 10s ease-in-out infinite alternate-reverse;
+  z-index: 0;
+}
+
+@keyframes floatGlow {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(40px) rotate(10deg); }
+}
+
+/* 3D Card Effect */
+.auth-card {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.6s ease;
+  transform-style: preserve-3d;
+}
+
+.auth-card:hover {
+  transform: rotateY(6deg) rotateX(6deg);
+}
+
+/* Button hover */
+.btn.primary:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+}
+
+/* Google button hover */
+.google-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 25px rgba(66,133,244,0.4);
+  transition: all 0.4s ease;
+}
+
+/* Floating 3D Box */
+.floating-3d {
+  position: absolute;
+  top: 20%;
+  left: 10%;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(45deg,#7c3aed,#6366f1);
+  border-radius: 20px;
+  opacity: 0.4;
+  animation: floatBox 6s ease-in-out infinite;
+  filter: blur(2px);
+}
+
+@keyframes floatBox {
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-40px) rotate(20deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+</style>
 </head>
 
 <body class="auth-body">
+
+<div class="floating-3d"></div>
 
 <div class="auth-wrapper">
 
@@ -40,12 +129,14 @@ Login
 
 <div class="divider">OR</div>
 
-<button id="googleLogin" class="google-btn" type="button">
-Continue with Google
+<button id="googleLogin" class="google-btn" type="button"
+style="display:flex;align-items:center;justify-content:center;gap:8px;">
+<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
+<span>Continue with Google</span>
 </button>
 
 <p class="auth-switch">
-Don't have account?
+No account?
 <a href="signup.html">Signup</a>
 </p>
 
@@ -54,142 +145,5 @@ Don't have account?
 </div>
 </div>
 
-<script type="module">
-
-import { initializeApp } from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-
-import {
-getAuth,
-signInWithEmailAndPassword,
-signInWithPopup,
-GoogleAuthProvider,
-signOut
-} from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-import {
-getFirestore,
-doc,
-getDoc,
-setDoc,
-updateDoc
-} from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
-apiKey:"AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
-authDomain:"login-65d4b.firebaseapp.com",
-projectId:"login-65d4b",
-storageBucket:"login-65d4b.appspot.com",
-messagingSenderId:"239979806578",
-appId:"1:239979806578:web:65db25b7e975ef0f1867eb"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const error = document.getElementById("error");
-
-/* EMAIL LOGIN */
-loginForm.addEventListener("submit", async (e)=>{
-e.preventDefault();
-error.innerText="";
-
-const role =
-document.querySelector('input[name="role"]:checked').value;
-
-try{
-const userCred = await signInWithEmailAndPassword(
-auth,
-email.value.trim(),
-password.value
-);
-
-await handleLogin(userCred.user, role);
-
-}catch(err){
-error.innerText=err.message;
-}
-});
-
-/* GOOGLE LOGIN */
-const provider = new GoogleAuthProvider();
-
-googleLogin.addEventListener("click", async ()=>{
-error.innerText="";
-const role =
-document.querySelector('input[name="role"]:checked').value;
-
-try{
-const result = await signInWithPopup(auth,provider);
-await handleLogin(result.user, role);
-}catch(err){
-error.innerText=err.message;
-}
-});
-
-/* MAIN LOGIN LOGIC */
-async function handleLogin(user, selectedRole){
-
-const userRef = doc(db,"users",user.uid);
-const snap = await getDoc(userRef);
-
-/* 🔥 FIX: If user data missing → auto create */
-if(!snap.exists()){
-
-await setDoc(userRef,{
-name:user.displayName || "User",
-email:user.email,
-role:selectedRole,
-approved:selectedRole==="teacher" ? false : true,
-failedAttempts:0,
-locked:false,
-createdAt:new Date()
-});
-
-window.location.replace(
-selectedRole==="teacher"
-? "teacher-dashboard.html"
-: "dashboard.html"
-);
-return;
-}
-
-const data = snap.data();
-
-/* LOCK CHECK */
-if(data.locked === true){
-error.innerText="Account locked.";
-await signOut(auth);
-return;
-}
-
-/* ROLE CHECK */
-if(data.role !== selectedRole){
-error.innerText="Registered as "+data.role;
-await signOut(auth);
-return;
-}
-
-/* TEACHER APPROVAL */
-if(data.role==="teacher" && data.approved!==true){
-error.innerText="Waiting for admin approval.";
-await signOut(auth);
-return;
-}
-
-/* RESET FAILED ATTEMPTS */
-await updateDoc(userRef,{ failedAttempts:0 });
-
-window.location.replace(
-data.role==="teacher"
-? "teacher-dashboard.html"
-: "dashboard.html"
-);
-
-}
-
-</script>
 </body>
 </html>
