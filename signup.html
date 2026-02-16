@@ -1,25 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Signup | Adhyayana</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signup | Adhyayana</title>
 
-  <link rel="stylesheet" href="css/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 
 <body class="auth-body">
 
 <div class="auth-wrapper">
 
-  <!-- LOGO -->
   <div class="auth-logo">
     <img src="logo.png" alt="Adhyayana Logo">
     <h2>ADHYAYANA</h2>
   </div>
 
-  <!-- CARD -->
   <div class="auth-card auth-animate login-card">
 
     <h3>Create Account 🚀</h3>
@@ -27,7 +25,7 @@
 
     <form id="signupForm">
 
-      <!-- ROLE SELECTION -->
+      <!-- ROLE -->
       <div style="display:flex; gap:20px; margin-bottom:15px;">
         <label>
           <input type="radio" name="role" value="student" checked>
@@ -40,13 +38,8 @@
         </label>
       </div>
 
-      <!-- NAME -->
       <input type="text" id="signupName" placeholder="Full Name" required>
-
-      <!-- EMAIL -->
       <input type="email" id="signupEmail" placeholder="Email Address" required>
-
-      <!-- PASSWORD -->
       <input type="password" id="signupPassword" placeholder="Password" required>
 
       <button class="btn primary full" type="submit">
@@ -81,8 +74,7 @@ from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getFirestore,
   doc,
-  setDoc,
-  getDoc
+  setDoc
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -101,43 +93,33 @@ const db = getFirestore(app);
 
 const error = document.getElementById("error");
 
-/* SECURE SIGNUP */
 document.getElementById("signupForm")
 .addEventListener("submit", async (e)=>{
   e.preventDefault();
   error.innerText="";
 
-  const name = document.getElementById("signupName").value.trim();
-  const email = document.getElementById("signupEmail").value.trim();
-  const password = document.getElementById("signupPassword").value;
-  const role = document.querySelector('input[name="role"]:checked').value;
+  const name = signupName.value.trim();
+  const email = signupEmail.value.trim();
+  const password = signupPassword.value;
+  const role =
+    document.querySelector('input[name="role"]:checked').value;
 
   try{
 
-    // Create account in Firebase Auth
     const userCred = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
+      auth,email,password
     );
 
     const user = userCred.user;
 
-    // Double-check role document does not exist
-    const userRef = doc(db,"users",user.uid);
-    const existing = await getDoc(userRef);
-
-    if(existing.exists()){
-      error.innerText="Account already exists.";
-      return;
-    }
-
-    // Save role securely
-    await setDoc(userRef,{
-      name: name,
-      email: email,
-      role: role,
-      createdAt: new Date()
+    await setDoc(doc(db,"users",user.uid),{
+      name:name,
+      email:email,
+      role:role,
+      approved: role === "teacher" ? false : true,
+      failedAttempts:0,
+      locked:false,
+      createdAt:new Date()
     });
 
     window.location.replace("dashboard.html");
@@ -149,6 +131,5 @@ document.getElementById("signupForm")
 });
 
 </script>
-
 </body>
 </html>
