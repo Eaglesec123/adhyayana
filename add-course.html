@@ -37,7 +37,7 @@ h2{
   margin-bottom:25px;
 }
 
-input, textarea{
+input,textarea{
   width:100%;
   padding:12px;
   margin-bottom:15px;
@@ -71,7 +71,7 @@ button:hover{
   margin-top:15px;
   background:#eee;
   border-radius:10px;
-  height:12px;
+  height:14px;
   overflow:hidden;
   display:none;
 }
@@ -81,6 +81,12 @@ button:hover{
   width:0%;
   background:#667eea;
   transition:width 0.3s ease;
+}
+
+.progress-text{
+  text-align:center;
+  margin-top:8px;
+  font-weight:600;
 }
 
 .message{
@@ -105,11 +111,11 @@ button:hover{
   <input type="text" id="title" placeholder="Course Title">
   <textarea id="description" placeholder="Course Description"></textarea>
   <input type="number" id="price" placeholder="Course Price (₹)">
-  
-  <label>Course Thumbnail</label>
+
+  <label>Thumbnail</label>
   <input type="file" id="thumbnail" accept="image/*">
 
-  <label>Course Video</label>
+  <label>Video</label>
   <input type="file" id="video" accept="video/*">
 
   <button onclick="addCourse()">Create Course</button>
@@ -118,6 +124,7 @@ button:hover{
     <div class="progress-bar" id="progressBar"></div>
   </div>
 
+  <div class="progress-text" id="progressText"></div>
   <div class="message" id="msg"></div>
 </div>
 
@@ -128,9 +135,7 @@ import { initializeApp } from
 
 import { 
   getAuth, 
-  onAuthStateChanged,
-  setPersistence,
-  browserLocalPersistence
+  onAuthStateChanged
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -144,18 +149,12 @@ import {
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-import { 
-  getStorage,
-  ref,
-  uploadBytesResumable,
-  getDownloadURL
-} from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-
-/* FIREBASE CONFIG */
+/* =========================
+   FIREBASE CONFIG
+========================= */
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
+  apiKey: "YOUR_FIREBASE_KEY",
   authDomain: "login-65d4b.firebaseapp.com",
   projectId: "login-65d4b",
   storageBucket: "login-65d4b.appspot.com",
@@ -166,11 +165,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
-await setPersistence(auth, browserLocalPersistence);
-
-/* ROLE CHECK */
+/* =========================
+   TEACHER ROLE CHECK
+========================= */
 
 onAuthStateChanged(auth, async (user)=>{
 
@@ -182,74 +180,104 @@ onAuthStateChanged(auth, async (user)=>{
   const snap = await getDoc(doc(db,"users",user.uid));
 
   if(!snap.exists() || snap.data().role !== "teacher"){
-    alert("Access denied! Only teachers can upload courses.");
+    alert("Access denied! Only teachers allowed.");
     window.location="dashboard.html";
   }
 
 });
 
-/* UPLOAD FUNCTION */
+/* =========================
+   CLOUDINARY UPLOAD
+========================= */
+
+function uploadToCloudinary(file, resourceType){
+
+  return new Promise((resolve,reject)=>{
+
+    const url=`https://api.cloudinary.com/v1_1/dlqbfsh92/${resourceType}/upload`;
+
+    const xhr=new XMLHttpRequest();
+    const formData=new FormData();
+
+    formData.append("file",file);
+    formData.append("upload_preset","darshan");
+
+    xhr.open("POST",url,true);
+
+    xhr.upload.addEventListener("progress",(e)=>{
+      if(e.lengthComputable){
+        const percent=(e.loaded/e.total)*100;
+        document.getElementById("progressBar").style.width=percent+"%";
+        document.getElementById("progressText").innerText=
+          "Uploading... "+percent.toFixed(0)+"%";
+      }
+    });
+
+    xhr.onload=function(){
+      if(xhr.status===200){
+        const response=JSON.parse(xhr.responseText);
+        resolve(response.secure_url);
+      }else{
+        reject("Upload failed");
+      }
+    };
+
+    xhr.onerror=function(){
+      reject("Upload error");
+    };
+
+    xhr.send(formData);
+
+  });
+
+}
+
+/* =========================
+   MAIN COURSE UPLOAD
+========================= */
 
 window.addCourse = async function(){
 
   const title=document.getElementById("title").value;
   const description=document.getElementById("description").value;
   const price=document.getElementById("price").value;
-  const thumbnailFile=document.getElementById("thumbnail").files[0];
+  const thumbFile=document.getElementById("thumbnail").files[0];
   const videoFile=document.getElementById("video").files[0];
+
   const msg=document.getElementById("msg");
   const progressContainer=document.getElementById("progressContainer");
-  const progressBar=document.getElementById("progressBar");
 
-  if(!title || !description || !price || !thumbnailFile || !videoFile){
+  if(!title || !description || !price || !thumbFile || !videoFile){
     msg.style.color="red";
-    msg.innerText="Please fill all fields & select files";
+    msg.innerText="Fill all fields & select files";
     return;
   }
 
   try{
 
     progressContainer.style.display="block";
+    document.getElementById("progressBar").style.width="0%";
+    document.getElementById("progressText").innerText="Starting upload...";
 
-    /* Upload Thumbnail */
-    const thumbRef=ref(storage,"thumbnails/"+Date.now()+"_"+thumbnailFile.name);
-    const thumbUpload=uploadBytesResumable(thumbRef,thumbnailFile);
+    const thumbnailUrl = await uploadToCloudinary(thumbFile,"image");
+    const videoUrl = await uploadToCloudinary(videoFile,"video");
 
-    thumbUpload.on("state_changed",(snapshot)=>{
-      const progress=(snapshot.bytesTransferred/snapshot.totalBytes)*100;
-      progressBar.style.width=progress+"%";
-    });
-
-    await thumbUpload;
-    const thumbnailUrl=await getDownloadURL(thumbRef);
-
-    /* Upload Video */
-    const videoRef=ref(storage,"videos/"+Date.now()+"_"+videoFile.name);
-    const videoUpload=uploadBytesResumable(videoRef,videoFile);
-
-    videoUpload.on("state_changed",(snapshot)=>{
-      const progress=(snapshot.bytesTransferred/snapshot.totalBytes)*100;
-      progressBar.style.width=progress+"%";
-    });
-
-    await videoUpload;
-    const videoUrl=await getDownloadURL(videoRef);
-
-    /* Save Course */
     await addDoc(collection(db,"courses"),{
-      title:title,
+      title,
+      description,
       price:Number(price),
-      description:description,
-      thumbnailUrl:thumbnailUrl,
-      videoUrl:videoUrl,
+      thumbnailUrl,
+      videoUrl,
       creatorId:auth.currentUser.uid,
       isPublished:true,
       createdAt:serverTimestamp()
     });
 
-    progressBar.style.width="100%";
+    document.getElementById("progressBar").style.width="100%";
+    document.getElementById("progressText").innerText="Upload Complete 🎉";
+
     msg.style.color="green";
-    msg.innerText="Upload Complete 🎉";
+    msg.innerText="Course Created Successfully!";
 
     setTimeout(()=>{
       window.location="dashboard.html";
