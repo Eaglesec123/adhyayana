@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <title>Admin Analytics</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body{
@@ -69,6 +71,11 @@ tr:hover{
   text-decoration:none;
   color:white;
 }
+input{
+  padding:8px;
+  border-radius:6px;
+  border:none;
+}
 </style>
 </head>
 
@@ -111,6 +118,26 @@ tr:hover{
   <tbody id="courseTableBody"></tbody>
 </table>
 
+<h3 style="margin-top:40px;">Monthly Revenue Chart</h3>
+<canvas id="revenueChart" height="100"></canvas>
+
+<div style="margin-top:30px;">
+  <button onclick="exportCSV()" 
+    style="padding:10px 20px;background:#16a34a;border:none;border-radius:8px;color:white;cursor:pointer;">
+    Export Revenue CSV
+  </button>
+</div>
+
+<div style="margin-top:50px;background:#1e293b;padding:25px;border-radius:15px;">
+  <h3>Withdraw Earnings</h3>
+  <p>Available Balance: ₹ <span id="availableBalance">0</span></p>
+  <input type="number" id="withdrawAmount" placeholder="Enter Amount">
+  <button onclick="requestWithdraw()"
+    style="padding:10px 20px;margin-left:10px;background:#2563eb;border:none;border-radius:8px;color:white;">
+    Request Withdrawal
+  </button>
+</div>
+
 </div>
 
 <script type="module">
@@ -120,8 +147,7 @@ import { initializeApp } from
 
 import {
   getAuth,
-  onAuthStateChanged,
-  signOut
+  onAuthStateChanged
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -130,7 +156,8 @@ import {
   collection,
   query,
   where,
-  getDocs
+  getDocs,
+  addDoc
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -146,6 +173,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+let monthlyData = {};
+let totalRevenueGlobal = 0;
 
 onAuthStateChanged(auth, async(user)=>{
 
@@ -168,6 +198,8 @@ async function loadAnalytics(uid){
 
   let totalStudents = 0;
   let totalRevenue = 0;
+  monthlyData = {};
+
   let tableBody = document.getElementById("courseTableBody");
   tableBody.innerHTML = "";
 
@@ -189,11 +221,21 @@ async function loadAnalytics(uid){
 
     purchaseSnap.forEach(pDoc=>{
       const p = pDoc.data();
+
       if(p.courseId === courseDoc.id){
+
         students++;
         totalStudents++;
-        revenue += Number(p.price || 0);
-        totalRevenue += Number(p.price || 0);
+
+        const price = Number(p.price || 0);
+        revenue += price;
+        totalRevenue += price;
+
+        const date = p.createdAt?.toDate?.();
+        if(date){
+          const month = date.getFullYear()+"-"+(date.getMonth()+1);
+          monthlyData[month] = (monthlyData[month] || 0) + price;
+        }
       }
     });
 
@@ -209,7 +251,83 @@ async function loadAnalytics(uid){
 
   document.getElementById("totalStudents").innerText = totalStudents;
   document.getElementById("totalRevenue").innerText = totalRevenue;
+  document.getElementById("availableBalance").innerText = totalRevenue;
+
+  totalRevenueGlobal = totalRevenue;
+
+  drawChart();
 }
+
+function drawChart(){
+
+  const ctx = document.getElementById("revenueChart");
+
+  new Chart(ctx,{
+    type:"line",
+    data:{
+      labels:Object.keys(monthlyData),
+      datasets:[{
+        label:"Monthly Revenue",
+        data:Object.values(monthlyData),
+        borderColor:"#3b82f6",
+        backgroundColor:"rgba(59,130,246,0.2)",
+        tension:0.3,
+        fill:true
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{labels:{color:"white"}}
+      },
+      scales:{
+        x:{ticks:{color:"white"}},
+        y:{ticks:{color:"white"}}
+      }
+    }
+  });
+}
+
+window.exportCSV = function(){
+
+  let csv = "Month,Revenue\n";
+
+  for(let month in monthlyData){
+    csv += month + "," + monthlyData[month] + "\n";
+  }
+
+  const blob = new Blob([csv],{type:"text/csv"});
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "revenue.csv";
+  a.click();
+};
+
+window.requestWithdraw = async function(){
+
+  const amount = Number(document.getElementById("withdrawAmount").value);
+
+  if(amount <= 0){
+    alert("Enter valid amount");
+    return;
+  }
+
+  if(amount > totalRevenueGlobal){
+    alert("Insufficient balance");
+    return;
+  }
+
+  await addDoc(collection(db,"withdrawals"),{
+    teacherId:auth.currentUser.uid,
+    amount:amount,
+    status:"pending",
+    createdAt:new Date()
+  });
+
+  alert("Withdrawal request submitted ✅");
+};
 
 </script>
 
