@@ -13,35 +13,41 @@
 
 <div class="auth-wrapper">
 
+  <!-- LOGO -->
   <div class="auth-logo">
     <img src="logo.png" alt="Adhyayana Logo">
     <h2>ADHYAYANA</h2>
   </div>
 
+  <!-- CARD -->
   <div class="auth-card auth-animate login-card">
 
     <h3>Create Account 🚀</h3>
-    <p class="auth-sub">Join and start learning & earning</p>
+    <p class="auth-sub">Join as Student or Teacher</p>
 
     <form id="signupForm">
 
-      <!-- ROLE -->
-      <div style="display:flex; gap:15px; margin-bottom:15px;">
+      <!-- ROLE SELECTION -->
+      <div style="display:flex; gap:20px; margin-bottom:15px;">
         <label>
-          <input type="radio" name="role" value="student" checked> Student
+          <input type="radio" name="role" value="student" checked>
+          Student
         </label>
+
         <label>
-          <input type="radio" name="role" value="teacher"> Teacher
+          <input type="radio" name="role" value="teacher">
+          Teacher
         </label>
       </div>
 
+      <!-- NAME -->
       <input type="text" id="signupName" placeholder="Full Name" required>
+
+      <!-- EMAIL -->
       <input type="email" id="signupEmail" placeholder="Email Address" required>
 
-      <div class="password-field">
-        <input type="password" id="signupPassword" placeholder="Password" required>
-        <span class="toggle-password" id="toggleSignupPassword">👁</span>
-      </div>
+      <!-- PASSWORD -->
+      <input type="password" id="signupPassword" placeholder="Password" required>
 
       <button class="btn primary full" type="submit">
         Create Account
@@ -49,19 +55,11 @@
 
     </form>
 
-    <div class="divider">OR</div>
-
-    <button id="googleSignup" class="google-btn" type="button">
-      <img src="images/google.png" alt="Google">
-      <span>Continue with Google</span>
-    </button>
-
     <div class="auth-footer">
       <p class="auth-switch">
         Already have an account?
         <a href="login.html">Login</a>
       </p>
-      <a href="index.html" class="back-home">← Back to Home</a>
     </div>
 
     <p id="error" style="color:red; margin-top:10px;"></p>
@@ -76,9 +74,7 @@ import { initializeApp } from
 
 import {
   getAuth,
-  createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup
+  createUserWithEmailAndPassword
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -102,25 +98,44 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
 const error = document.getElementById("error");
 
-/* EMAIL SIGNUP */
-signupForm.addEventListener("submit", async (e)=>{
+/* SECURE SIGNUP */
+document.getElementById("signupForm")
+.addEventListener("submit", async (e)=>{
   e.preventDefault();
   error.innerText="";
 
+  const name = document.getElementById("signupName").value.trim();
+  const email = document.getElementById("signupEmail").value.trim();
+  const password = document.getElementById("signupPassword").value;
   const role = document.querySelector('input[name="role"]:checked').value;
 
   try{
+
+    // Create account in Firebase Auth
     const userCred = await createUserWithEmailAndPassword(
       auth,
-      signupEmail.value,
-      signupPassword.value
+      email,
+      password
     );
 
-    await setDoc(doc(db,"users",userCred.user.uid),{
-      name: signupName.value,
-      email: signupEmail.value,
+    const user = userCred.user;
+
+    // Double-check role document does not exist
+    const userRef = doc(db,"users",user.uid);
+    const existing = await getDoc(userRef);
+
+    if(existing.exists()){
+      error.innerText="Account already exists.";
+      return;
+    }
+
+    // Save role securely
+    await setDoc(userRef,{
+      name: name,
+      email: email,
       role: role,
       createdAt: new Date()
     });
@@ -128,43 +143,12 @@ signupForm.addEventListener("submit", async (e)=>{
     window.location.replace("dashboard.html");
 
   }catch(err){
-    error.innerText = err.message;
-  }
-});
-
-/* GOOGLE SIGNUP */
-const provider = new GoogleAuthProvider();
-
-googleSignup.addEventListener("click", async ()=>{
-  error.innerText="";
-  try{
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    const role = document.querySelector('input[name="role"]:checked').value;
-
-    const userRef = doc(db,"users",user.uid);
-    const userDoc = await getDoc(userRef);
-
-    if(userDoc.exists()){
-      error.innerText="Account already exists as "+userDoc.data().role;
-      return;
-    }
-
-    await setDoc(userRef,{
-      name:user.displayName,
-      email:user.email,
-      role:role,
-      createdAt:new Date()
-    });
-
-    window.location.replace("dashboard.html");
-
-  }catch(err){
     error.innerText=err.message;
   }
+
 });
 
 </script>
-<script src="js/password-toggle.js"></script>
+
 </body>
 </html>
