@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Teacher Dashboard | Adhyayana</title>
+<title>Adhyayana Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -15,7 +15,6 @@
   --text:#ffffff;
   --accent:#22c55e;
 }
-
 body.light{
   --bg:#f1f5f9;
   --card:#ffffff;
@@ -31,158 +30,129 @@ body{
   transition:.3s;
 }
 
-/* ===== SIDEBAR ===== */
-
+/* SIDEBAR */
 .sidebar{
   width:260px;
   background:var(--card);
   height:100vh;
-  transition:.3s;
   padding:20px;
+  transition:.3s;
   position:fixed;
-  z-index:100;
 }
-
 .sidebar.collapsed{
   width:80px;
 }
-
 .sidebar.collapsed .text{
   display:none;
 }
-
 .sidebar a{
   display:flex;
-  align-items:center;
   gap:10px;
   padding:12px;
-  color:var(--text);
-  text-decoration:none;
-  border-radius:10px;
   margin:10px 0;
+  text-decoration:none;
+  color:var(--text);
+  border-radius:8px;
   transition:.3s;
 }
-
 .sidebar a:hover{
   background:rgba(34,197,94,.2);
 }
 
-.menu-toggle{
-  cursor:pointer;
-  margin-bottom:20px;
-}
-
-/* ===== MOBILE SIDEBAR ===== */
-
-@media(max-width:768px){
-  .sidebar{
-    transform:translateX(-100%);
-  }
-  .sidebar.active{
-    transform:translateX(0);
-  }
-}
-
-/* ===== MAIN ===== */
-
+/* MAIN */
 .main{
   flex:1;
   margin-left:260px;
   padding:30px;
   transition:.3s;
 }
-
 .sidebar.collapsed ~ .main{
   margin-left:80px;
 }
 
-@media(max-width:768px){
-  .main{
-    margin-left:0;
-  }
-}
-
-/* ===== TOPBAR ===== */
-
+/* TOPBAR */
 .topbar{
   display:flex;
   justify-content:space-between;
   align-items:center;
   margin-bottom:30px;
 }
-
 .top-right{
   display:flex;
-  align-items:center;
   gap:20px;
+  align-items:center;
 }
 
 /* Notification */
-
 .notification{
   position:relative;
   cursor:pointer;
+  transition:.3s;
 }
-
+.notification:hover{
+  transform:scale(1.1);
+}
 .badge{
   position:absolute;
   top:-6px;
   right:-6px;
   background:red;
   color:white;
-  font-size:12px;
+  font-size:11px;
   padding:3px 6px;
   border-radius:50%;
 }
 
 /* Profile */
-
 .profile{
   position:relative;
   cursor:pointer;
 }
-
 .dropdown{
   position:absolute;
-  right:0;
   top:35px;
+  right:0;
   background:var(--card);
-  padding:15px;
-  border-radius:10px;
+  padding:12px;
+  border-radius:8px;
   display:none;
 }
-
 .profile.open .dropdown{
   display:block;
 }
 
-/* ===== STATS ===== */
-
+/* STATS */
 .stats{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
   gap:20px;
 }
-
 .stat-card{
   background:var(--card);
   padding:25px;
-  border-radius:20px;
-  box-shadow:0 10px 25px rgba(0,0,0,.2);
+  border-radius:18px;
+  transition:.3s;
 }
-
+.stat-card:hover{
+  transform:translateY(-6px) scale(1.02);
+  box-shadow:0 15px 30px rgba(0,0,0,.2);
+}
 .stat-number{
   font-size:26px;
   font-weight:700;
 }
 
-/* ===== CHART ===== */
-
+/* CHART */
 .chart-card{
   margin-top:30px;
   background:var(--card);
   padding:25px;
-  border-radius:20px;
+  border-radius:18px;
+}
+
+select{
+  padding:6px 10px;
+  border-radius:6px;
 }
 </style>
 </head>
@@ -190,7 +160,7 @@ body{
 <body>
 
 <div class="sidebar" id="sidebar">
-  <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
+  <div onclick="toggleSidebar()">☰</div>
   <a href="#"><span>🏠</span><span class="text">Dashboard</span></a>
   <a href="#"><span>📚</span><span class="text">Courses</span></a>
   <a href="#"><span>💰</span><span class="text">Withdraw</span></a>
@@ -200,22 +170,21 @@ body{
 
 <div class="topbar">
   <h2>Dashboard</h2>
-
   <div class="top-right">
 
-    <!-- Dark Mode Switch -->
+    <select id="revenueFilter" onchange="filterRevenue(this.value)">
+      <option value="monthly">Monthly</option>
+      <option value="yearly">Yearly</option>
+    </select>
+
     <label>
-      <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
-      🌙
+      <input type="checkbox" id="themeToggle" onchange="toggleTheme()"> 🌙
     </label>
 
-    <!-- Notification -->
     <div class="notification">
-      🔔
-      <div class="badge" id="notifCount">0</div>
+      🔔 <div class="badge" id="notifCount">0</div>
     </div>
 
-    <!-- Profile -->
     <div class="profile" onclick="toggleProfile()">
       👤
       <div class="dropdown">
@@ -228,23 +197,21 @@ body{
   </div>
 </div>
 
-<!-- STATS -->
 <div class="stats">
   <div class="stat-card">
-    <div class="stat-number" id="totalRevenue">0</div>
+    <div class="stat-number" id="totalRevenue">₹0</div>
     Total Revenue
   </div>
   <div class="stat-card">
-    <div class="stat-number" id="teacherRevenue">0</div>
+    <div class="stat-number" id="teacherRevenue">₹0</div>
     Earnings
   </div>
   <div class="stat-card">
-    <div class="stat-number" id="availableBalance">0</div>
+    <div class="stat-number" id="availableBalance">₹0</div>
     Available
   </div>
 </div>
 
-<!-- CHART -->
 <div class="chart-card">
   <canvas id="revenueChart"></canvas>
 </div>
@@ -254,86 +221,148 @@ body{
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, query, where, getDocs } 
+import { getFirestore, collection, query, where, onSnapshot, doc, getDoc }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-/* FIREBASE CONFIG */
 const firebaseConfig = { YOUR_FIREBASE_CONFIG };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* SAVE THEME IN LOCAL STORAGE */
+let fullRevenueData = new Array(12).fill(0);
+let revenueChart;
+
+/* Theme Save */
 if(localStorage.getItem("theme")==="light"){
   document.body.classList.add("light");
   document.getElementById("themeToggle").checked=true;
 }
-
 window.toggleTheme=function(){
   document.body.classList.toggle("light");
   localStorage.setItem("theme",
-    document.body.classList.contains("light") ? "light" : "dark"
+    document.body.classList.contains("light")?"light":"dark"
   );
 }
 
-/* SIDEBAR COLLAPSE */
+/* Sidebar */
 window.toggleSidebar=function(){
   document.getElementById("sidebar").classList.toggle("collapsed");
 }
 
-/* PROFILE DROPDOWN */
+/* Profile */
 window.toggleProfile=function(){
   document.querySelector(".profile").classList.toggle("open");
 }
 
-/* FIREBASE REVENUE AUTO LOAD */
+/* Counter Animation */
+function animateCounter(id,target){
+  let start=0;
+  const duration=800;
+  const startTime=performance.now();
+  function update(now){
+    const progress=Math.min((now-startTime)/duration,1);
+    const value=Math.floor(progress*target);
+    document.getElementById(id).innerText="₹"+value;
+    if(progress<1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
 
+/* Prediction */
+function predictRevenue(data){
+  const n=data.length;
+  let sumX=0,sumY=0,sumXY=0,sumXX=0;
+  for(let i=0;i<n;i++){
+    sumX+=i;
+    sumY+=data[i];
+    sumXY+=i*data[i];
+    sumXX+=i*i;
+  }
+  const slope=(n*sumXY-sumX*sumY)/(n*sumXX-sumX*sumX);
+  const intercept=(sumY-slope*sumX)/n;
+  let prediction=[];
+  for(let i=0;i<n+3;i++){
+    prediction.push(intercept+slope*i);
+  }
+  return prediction;
+}
+
+/* Chart Init */
+function initChart(){
+  const ctx=document.getElementById("revenueChart").getContext("2d");
+  revenueChart=new Chart(ctx,{
+    type:"line",
+    data:{labels:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+    datasets:[]},
+    options:{responsive:true}
+  });
+}
+
+/* Update Chart */
+function updateChart(data){
+  const prediction=predictRevenue(data);
+  revenueChart.data.datasets=[
+    {
+      label:"Revenue",
+      data:data,
+      borderColor:"#22c55e",
+      fill:true,
+      tension:.4
+    },
+    {
+      label:"AI Prediction",
+      data:prediction,
+      borderColor:"#f59e0b",
+      borderDash:[5,5],
+      fill:false
+    }
+  ];
+  revenueChart.update();
+}
+
+/* Filter */
+window.filterRevenue=function(type){
+  if(type==="yearly"){
+    const total=fullRevenueData.reduce((a,b)=>a+b,0);
+    updateChart([total]);
+  }else{
+    updateChart(fullRevenueData);
+  }
+}
+
+/* Firebase Live */
 onAuthStateChanged(auth, async(user)=>{
   if(!user) return;
 
-  const snap=await getDocs(
-    query(collection(db,"purchases"),where("teacherId","==",user.uid))
-  );
+  const roleSnap=await getDoc(doc(db,"users",user.uid));
+  if(roleSnap.exists() && roleSnap.data().role==="admin"){
+    console.log("Admin Mode");
+  }
 
-  let total=0;
-  let monthlyData=[0,0,0,0,0,0];
+  const q=query(collection(db,"purchases"),where("teacherId","==",user.uid));
 
-  snap.forEach(doc=>{
-    const data=doc.data();
-    total+=data.amount;
+  onSnapshot(q,(snapshot)=>{
+    let total=0;
+    fullRevenueData=new Array(12).fill(0);
 
-    const month=new Date(data.createdAt?.seconds*1000 || Date.now()).getMonth();
-    if(month<6) monthlyData[month]+=data.amount;
+    snapshot.forEach(doc=>{
+      const data=doc.data();
+      total+=data.amount;
+      const month=new Date(data.createdAt?.seconds*1000||Date.now()).getMonth();
+      fullRevenueData[month]+=data.amount;
+    });
+
+    animateCounter("totalRevenue",total);
+    animateCounter("teacherRevenue",total*0.8);
+    animateCounter("availableBalance",total*0.7);
+
+    document.getElementById("notifCount").innerText=snapshot.size;
+
+    updateChart(fullRevenueData);
   });
-
-  document.getElementById("totalRevenue").innerText="₹"+total;
-  document.getElementById("teacherRevenue").innerText="₹"+(total*0.8);
-  document.getElementById("availableBalance").innerText="₹"+(total*0.7);
-
-  document.getElementById("notifCount").innerText=snap.size;
-
-  loadChart(monthlyData);
 });
 
-/* CHART */
-
-function loadChart(data){
-  const ctx=document.getElementById("revenueChart").getContext("2d");
-  new Chart(ctx,{
-    type:"line",
-    data:{
-      labels:["Jan","Feb","Mar","Apr","May","Jun"],
-      datasets:[{
-        data:data,
-        borderColor:"#22c55e",
-        backgroundColor:"rgba(34,197,94,.2)",
-        fill:true,
-        tension:.4
-      }]
-    },
-    options:{responsive:true,plugins:{legend:{display:false}}}
-  });
-}
+initChart();
 </script>
 
 </body>
