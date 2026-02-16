@@ -131,7 +131,6 @@ body{
   </div>
 </div>
 
-
 <script type="module">
 
 import { initializeApp } from 
@@ -146,13 +145,13 @@ import {
 
 import {
   getFirestore,
-  doc,
-  getDoc
+  collection,
+  query,
+  where,
+  getDocs
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-
-/* FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
   authDomain: "login-65d4b.firebaseapp.com",
@@ -166,35 +165,32 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+/* =========================
+   AUTH CHECK + ROLE CHECK
+========================= */
 
-/* ================= ROLE SECURITY FIX ================= */
-onAuthStateChanged(auth, async (user)=>{
+onAuthStateChanged(auth, async (user) => {
 
-  if(!user){
+  if (!user) {
     window.location.replace("login.html");
     return;
   }
 
-  const userDoc = await getDoc(doc(db,"users",user.uid));
+  const role = sessionStorage.getItem("role");
 
-  if(!userDoc.exists()){
+  if (!role) {
     await signOut(auth);
     window.location.replace("login.html");
     return;
   }
 
-  const firestoreRole = userDoc.data().role;
-  const sessionRole = sessionStorage.getItem("role");
-
-  // 🚨 STRICT ROLE CHECK
-  if(sessionRole && firestoreRole !== sessionRole){
-    await signOut(auth);
-    alert("Unauthorized access blocked.");
-    window.location.replace("login.html");
+  // 🔥 If teacher → redirect to add-course
+  if (role === "teacher") {
+    window.location.replace("add-course.html");
     return;
   }
 
-  // Load user data normally (no UI change)
+  // Student dashboard continues
   document.getElementById("topUserName").innerText =
     user.displayName || user.email;
 
@@ -202,17 +198,72 @@ onAuthStateChanged(auth, async (user)=>{
     user.photoURL ||
     "https://cdn-icons-png.flaticon.com/512/847/847969.png";
 
+  loadDashboard(user.uid);
 });
 
+/* DASHBOARD LOGIC */
+async function loadDashboard(uid){
+
+  let earnings = 0;
+  let totalStudents = 0;
+  let tableBody = document.getElementById("courseTableBody");
+  tableBody.innerHTML = "";
+
+  const courseQuery = query(
+    collection(db,"courses"),
+    where("creatorId","==",uid)
+  );
+
+  const courseSnap = await getDocs(courseQuery);
+
+  let myCourses = [];
+
+  courseSnap.forEach(docSnap=>{
+    const data = docSnap.data();
+    data.id = docSnap.id;
+    myCourses.push(data);
+  });
+
+  const purchaseSnap = await getDocs(collection(db,"purchases"));
+
+  myCourses.forEach(course => {
+
+    let students = 0;
+
+    purchaseSnap.forEach(pDoc=>{
+      const p = pDoc.data();
+      if(p.courseId === course.id){
+        students++;
+        totalStudents++;
+        earnings += Number(p.price || 0);
+      }
+    });
+
+    tableBody.innerHTML += `
+      <tr>
+        <td>${course.title}</td>
+        <td>₹ ${course.price}</td>
+        <td>${students}</td>
+      </tr>
+    `;
+  });
+
+  document.getElementById("totalCourses").innerText = myCourses.length;
+  document.getElementById("totalStudents").innerText = totalStudents;
+  document.getElementById("totalEarnings").innerText = earnings;
+  document.getElementById("notifCount").innerText = totalStudents;
+}
 
 /* LOGOUT */
 window.logout = async function(){
+  sessionStorage.clear();
   await signOut(auth);
-  sessionStorage.removeItem("role");
   window.location.replace("login.html");
 }
 
 </script>
 
+
 </body>
 </html>
+
