@@ -13,13 +13,11 @@
 
 <div class="auth-wrapper">
 
-  <!-- LOGO -->
   <div class="auth-logo">
     <img src="logo.png" alt="Adhyayana Logo">
     <h2>ADHYAYANA</h2>
   </div>
 
-  <!-- CARD -->
   <div class="auth-card auth-animate login-card">
 
     <h3>Welcome Back 👋</h3>
@@ -27,24 +25,17 @@
 
     <form id="loginForm">
 
-      <!-- ROLE SELECTION -->
-      <div style="display:flex; gap:10px; margin-bottom:15px;">
-        <label style="flex:1;">
+      <div style="display:flex; gap:15px; margin-bottom:15px;">
+        <label>
           <input type="radio" name="role" value="student" checked> Student
         </label>
-
-        <label style="flex:1;">
+        <label>
           <input type="radio" name="role" value="teacher"> Teacher
         </label>
       </div>
 
-      <!-- EMAIL -->
       <input type="email" id="email" placeholder="Email Address" required>
-
-      <!-- PASSWORD -->
-      <div class="password-field">
-        <input type="password" id="password" placeholder="Password" required>
-      </div>
+      <input type="password" id="password" placeholder="Password" required>
 
       <button class="btn primary full" type="submit">
         Login
@@ -52,20 +43,11 @@
 
     </form>
 
-    <div class="divider">OR</div>
-
-    <!-- GOOGLE LOGIN -->
-    <button id="googleLogin" class="google-btn" type="button">
-      <img src="images/google.png" alt="Google">
-      <span>Continue with Google</span>
-    </button>
-
     <div class="auth-footer">
       <p class="auth-switch">
         Don’t have an account?
         <a href="signup.html">Sign Up</a>
       </p>
-      <a href="index.html" class="back-home">← Back to Home</a>
     </div>
 
     <p id="error" style="color:red; margin-top:10px;"></p>
@@ -80,9 +62,7 @@ import { initializeApp } from
 
 import {
   getAuth,
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup
+  signInWithEmailAndPassword
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -105,51 +85,45 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const error=document.getElementById("error");
 
-const error = document.getElementById("error");
-
-/* EMAIL LOGIN */
 loginForm.addEventListener("submit", async(e)=>{
   e.preventDefault();
   error.innerText="";
 
-  const selectedRole = document.querySelector('input[name="role"]:checked').value;
+  const selectedRole = 
+    document.querySelector('input[name="role"]:checked').value;
 
   try{
-    const userCred = await signInWithEmailAndPassword(auth,email.value,password.value);
-    const user = userCred.user;
+    const userCred = await signInWithEmailAndPassword(
+      auth,
+      email.value,
+      password.value
+    );
 
-    const userDoc = await getDoc(doc(db,"users",user.uid));
+    const userDoc = await getDoc(doc(db,"users",userCred.user.uid));
 
-    if(userDoc.exists()){
-      const role = userDoc.data().role;
+    if(!userDoc.exists()){
+      error.innerText="User data not found.";
+      await auth.signOut();
+      return;
+    }
 
-      if(role !== selectedRole){
-        error.innerText = "Selected role does not match your account.";
-        return;
-      }
+    const savedRole=userDoc.data().role;
+
+    if(savedRole!==selectedRole){
+      error.innerText="This account is registered as "+savedRole;
+      await auth.signOut();
+      return;
     }
 
     window.location.replace("dashboard.html");
 
   }catch(err){
-    error.innerText = err.message;
-  }
-});
-
-/* GOOGLE LOGIN */
-const provider = new GoogleAuthProvider();
-
-googleLogin.addEventListener("click", async()=>{
-  try{
-    await signInWithPopup(auth, provider);
-    window.location.replace("dashboard.html");
-  }catch(err){
-    error.innerText = err.message;
+    error.innerText=err.message;
   }
 });
 
 </script>
-
 </body>
 </html>
