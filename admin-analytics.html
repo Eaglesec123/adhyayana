@@ -17,8 +17,6 @@ body{
   min-height:100vh;
 }
 
-/* SIDEBAR */
-
 .sidebar{
   width:250px;
   background:#111827;
@@ -67,15 +65,11 @@ body{
   box-shadow:0 15px 30px rgba(34,197,94,.4);
 }
 
-/* MAIN */
-
 .main{
   flex:1;
   padding:40px;
   overflow:auto;
 }
-
-/* STATS CARDS */
 
 .stats{
   display:grid;
@@ -139,7 +133,6 @@ body{
   <div class="logo">👨‍🏫 Teacher Panel</div>
   <a href="admin-analytics.html" class="nav-link">Dashboard</a>
   <a href="profile.html" class="nav-link">Profile</a>
-
   <button class="upload-btn" onclick="window.location='add-course.html'">
     ➕ Upload Course
   </button>
@@ -171,13 +164,11 @@ body{
   </div>
 </div>
 
-<!-- WITHDRAW SECTION -->
 <h3>💸 Withdraw Earnings</h3><br>
 
 <div class="stat-card" style="max-width:400px;">
   <input type="number" id="withdrawAmount" placeholder="Enter amount"
     style="width:100%;padding:10px;border-radius:10px;border:none;margin-bottom:15px;">
-
   <button id="withdrawBtn"
     style="padding:10px;width:100%;border:none;border-radius:10px;background:linear-gradient(90deg,#f59e0b,#d97706);color:white;font-weight:600;cursor:pointer;">
     Withdraw Now
@@ -214,7 +205,7 @@ import {
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
+  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
   authDomain: "login-65d4b.firebaseapp.com",
   projectId: "login-65d4b",
   storageBucket: "login-65d4b.appspot.com",
@@ -228,6 +219,8 @@ const db = getFirestore(app);
 
 let currentBalance = 0;
 
+/* ===== FIXED AUTH CHECK (NO AUTO LOGOUT) ===== */
+
 onAuthStateChanged(auth, async (user)=>{
 
   if(!user){
@@ -235,16 +228,37 @@ onAuthStateChanged(auth, async (user)=>{
     return;
   }
 
-  const snap = await getDoc(doc(db,"users",user.uid));
+  try{
 
-  if(!snap.exists() || snap.data().role !== "teacher"){
-    window.location="dashboard.html";
-    return;
+    const snap = await getDoc(doc(db,"users",user.uid));
+
+    if(!snap.exists()){
+      console.log("User doc missing");
+      return;   // STOP auto redirect
+    }
+
+    const userData = snap.data();
+
+    if(!userData.role){
+      console.log("Role missing");
+      return;   // STOP auto redirect
+    }
+
+    if(userData.role !== "teacher"){
+      window.location="dashboard.html";
+      return;
+    }
+
+    loadCourses(user.uid);
+    loadRevenue(user.uid);
+
+  }catch(error){
+    console.error("Auth Error:", error);
   }
 
-  loadCourses(user.uid);
-  loadRevenue(user.uid);
 });
+
+/* COURSES */
 
 async function loadCourses(uid){
 
@@ -275,6 +289,8 @@ async function loadCourses(uid){
   document.getElementById("totalCourses").innerText = totalCourses;
 }
 
+/* REVENUE */
+
 async function loadRevenue(uid){
 
   const q = query(collection(db,"purchases"), where("teacherId","==",uid));
@@ -304,7 +320,7 @@ window.deleteCourse = async function(id){
   location.reload();
 };
 
-/* WITHDRAW SYSTEM */
+/* WITHDRAW */
 
 document.getElementById("withdrawBtn").addEventListener("click", async ()=>{
 
