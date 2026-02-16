@@ -20,7 +20,8 @@ body{
   display:flex;
   justify-content:center;
   align-items:center;
-  height:100vh;
+  min-height:100vh;
+  padding:20px;
 }
 
 .container{
@@ -66,6 +67,22 @@ button:hover{
   background:#5563d1;
 }
 
+.progress-container{
+  margin-top:15px;
+  background:#eee;
+  border-radius:10px;
+  height:12px;
+  overflow:hidden;
+  display:none;
+}
+
+.progress-bar{
+  height:100%;
+  width:0%;
+  background:#667eea;
+  transition:width 0.3s ease;
+}
+
 .message{
   margin-top:15px;
   text-align:center;
@@ -74,7 +91,7 @@ button:hover{
 
 @media(max-width:480px){
   .container{
-    width:90%;
+    width:100%;
   }
 }
 </style>
@@ -89,7 +106,17 @@ button:hover{
   <textarea id="description" placeholder="Course Description"></textarea>
   <input type="number" id="price" placeholder="Course Price (₹)">
   
+  <label>Course Thumbnail</label>
+  <input type="file" id="thumbnail" accept="image/*">
+
+  <label>Course Video</label>
+  <input type="file" id="video" accept="video/*">
+
   <button onclick="addCourse()">Create Course</button>
+
+  <div class="progress-container" id="progressContainer">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
 
   <div class="message" id="msg"></div>
 </div>
@@ -117,9 +144,15 @@ import {
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-/* =========================
-   FIREBASE CONFIG
-========================= */
+import { 
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL
+} from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+/* FIREBASE CONFIG */
 
 const firebaseConfig = {
   apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
@@ -133,13 +166,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
-/* ✅ Persistent login */
 await setPersistence(auth, browserLocalPersistence);
 
-/* =========================
-   AUTH + REAL ROLE CHECK
-========================= */
+/* ROLE CHECK */
 
 onAuthStateChanged(auth, async (user)=>{
 
@@ -148,69 +179,81 @@ onAuthStateChanged(auth, async (user)=>{
     return;
   }
 
-  try{
+  const snap = await getDoc(doc(db,"users",user.uid));
 
-    const snap = await getDoc(doc(db,"users",user.uid));
-
-    if(!snap.exists()){
-      alert("User account data not found.");
-      window.location="login.html";
-      return;
-    }
-
-    const realRole = snap.data().role;
-
-    if(realRole !== "teacher"){
-      alert("Access denied! Only teachers can upload courses.");
-      window.location="dashboard.html";
-      return;
-    }
-
-  }catch(error){
-    console.error(error);
-    window.location="login.html";
+  if(!snap.exists() || snap.data().role !== "teacher"){
+    alert("Access denied! Only teachers can upload courses.");
+    window.location="dashboard.html";
   }
 
 });
 
-/* =========================
-   COURSE UPLOAD
-========================= */
+/* UPLOAD FUNCTION */
 
 window.addCourse = async function(){
 
   const title=document.getElementById("title").value;
   const description=document.getElementById("description").value;
   const price=document.getElementById("price").value;
+  const thumbnailFile=document.getElementById("thumbnail").files[0];
+  const videoFile=document.getElementById("video").files[0];
   const msg=document.getElementById("msg");
+  const progressContainer=document.getElementById("progressContainer");
+  const progressBar=document.getElementById("progressBar");
 
-  if(!title || !description || !price){
+  if(!title || !description || !price || !thumbnailFile || !videoFile){
     msg.style.color="red";
-    msg.innerText="Please fill all fields";
+    msg.innerText="Please fill all fields & select files";
     return;
   }
 
   try{
 
+    progressContainer.style.display="block";
+
+    /* Upload Thumbnail */
+    const thumbRef=ref(storage,"thumbnails/"+Date.now()+"_"+thumbnailFile.name);
+    const thumbUpload=uploadBytesResumable(thumbRef,thumbnailFile);
+
+    thumbUpload.on("state_changed",(snapshot)=>{
+      const progress=(snapshot.bytesTransferred/snapshot.totalBytes)*100;
+      progressBar.style.width=progress+"%";
+    });
+
+    await thumbUpload;
+    const thumbnailUrl=await getDownloadURL(thumbRef);
+
+    /* Upload Video */
+    const videoRef=ref(storage,"videos/"+Date.now()+"_"+videoFile.name);
+    const videoUpload=uploadBytesResumable(videoRef,videoFile);
+
+    videoUpload.on("state_changed",(snapshot)=>{
+      const progress=(snapshot.bytesTransferred/snapshot.totalBytes)*100;
+      progressBar.style.width=progress+"%";
+    });
+
+    await videoUpload;
+    const videoUrl=await getDownloadURL(videoRef);
+
+    /* Save Course */
     await addDoc(collection(db,"courses"),{
       title:title,
       price:Number(price),
       description:description,
+      thumbnailUrl:thumbnailUrl,
+      videoUrl:videoUrl,
       creatorId:auth.currentUser.uid,
       isPublished:true,
       createdAt:serverTimestamp()
     });
 
+    progressBar.style.width="100%";
     msg.style.color="green";
-    msg.innerText="Course Uploaded Successfully 🎉";
-
-    document.getElementById("title").value="";
-    document.getElementById("description").value="";
-    document.getElementById("price").value="";
+    msg.innerText="Upload Complete 🎉";
 
     setTimeout(()=>{
       window.location="dashboard.html";
-    },1000);
+    },1500);
 
   }catch(error){
     console.error(error);
@@ -224,4 +267,3 @@ window.addCourse = async function(){
 
 </body>
 </html>
-
