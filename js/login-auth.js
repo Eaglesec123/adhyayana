@@ -16,6 +16,7 @@ import {
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+
 const firebaseConfig = {
   apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
   authDomain: "login-65d4b.firebaseapp.com",
@@ -31,9 +32,13 @@ const db = getFirestore(app);
 
 const form = document.getElementById("loginForm");
 const googleBtn = document.getElementById("googleLogin");
+const errorBox = document.getElementById("errorMessage");
 
+
+/* ================= EMAIL LOGIN ================= */
 form.addEventListener("submit", async (e)=>{
   e.preventDefault();
+  errorBox.innerText = "";
 
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -42,31 +47,55 @@ form.addEventListener("submit", async (e)=>{
   try {
 
     const cred = await signInWithEmailAndPassword(auth,email,password);
-    const snap = await getDoc(doc(db,"users",cred.user.uid));
 
-    if(!snap.exists()){
-      alert("User data not found.");
+    const userDoc = await getDoc(doc(db,"users",cred.user.uid));
+
+    if(!userDoc.exists()){
+      errorBox.innerText = "Account data not found.";
       return;
     }
 
-    if(snap.data().role !== selectedRole){
-      alert("Role mismatch. You registered as "+snap.data().role);
+    const actualRole = userDoc.data().role;
+
+    // 🚨 STRICT ROLE CHECK
+    if(actualRole !== selectedRole){
+      errorBox.innerText =
+        "Access Denied. You are registered as " + actualRole + ".";
+      await auth.signOut();
       return;
     }
 
     window.location.replace("dashboard.html");
 
   } catch(err){
-    alert(err.message);
+    errorBox.innerText = err.message;
   }
+
 });
 
+
+/* ================= GOOGLE LOGIN ================= */
 googleBtn.addEventListener("click", async ()=>{
+
+  errorBox.innerText = "";
+
   try {
+
     const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth,provider);
+    const result = await signInWithPopup(auth, provider);
+
+    const userDoc = await getDoc(doc(db,"users",result.user.uid));
+
+    if(!userDoc.exists()){
+      errorBox.innerText = "User role not found.";
+      await auth.signOut();
+      return;
+    }
+
     window.location.replace("dashboard.html");
+
   } catch(err){
-    alert(err.message);
+    errorBox.innerText = err.message;
   }
+
 });
