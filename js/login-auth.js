@@ -6,7 +6,9 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
-  signOut
+  signOut,
+  setPersistence,
+  browserSessionPersistence
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -16,6 +18,11 @@ import {
   getDoc
 }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
+/* =========================
+   FIREBASE CONFIG
+========================= */
 
 const firebaseConfig = {
   apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
@@ -30,6 +37,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+/* 🔥 Force session-only login */
+await setPersistence(auth, browserSessionPersistence);
+
 const form = document.getElementById("loginForm");
 const googleBtn = document.getElementById("googleLogin");
 const errorMessage = document.getElementById("errorMessage");
@@ -43,6 +53,7 @@ form.addEventListener("submit", async (e)=>{
   e.preventDefault();
 
   errorMessage.textContent = "";
+  sessionStorage.clear(); // clear old role
 
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -56,23 +67,24 @@ form.addEventListener("submit", async (e)=>{
 
     if(!snap.exists()){
       await signOut(auth);
-      errorMessage.textContent = "User role not found.";
+      errorMessage.textContent = "Account data not found.";
       return;
     }
 
     const realRole = snap.data().role;
 
+    // 🔐 Strict role check
     if(realRole !== selectedRole){
       await signOut(auth);
-      errorMessage.textContent = 
-        "Access denied. You are registered as " + realRole;
+      errorMessage.textContent =
+        "Access denied! This email is registered as " + realRole;
       return;
     }
 
-    // Save role in session
     sessionStorage.setItem("role", realRole);
+    sessionStorage.setItem("uid", cred.user.uid);
 
-    window.location.href = "dashboard.html";
+    window.location.replace("dashboard.html");
 
   } catch(err){
     errorMessage.textContent = err.message;
@@ -87,6 +99,7 @@ form.addEventListener("submit", async (e)=>{
 googleBtn.addEventListener("click", async ()=>{
 
   errorMessage.textContent = "";
+  sessionStorage.clear(); // clear old session
 
   const selectedRole = document.getElementById("loginRole").value;
 
@@ -99,23 +112,24 @@ googleBtn.addEventListener("click", async ()=>{
 
     if(!snap.exists()){
       await signOut(auth);
-      errorMessage.textContent = "User role not found.";
+      errorMessage.textContent = "Account not registered. Please signup first.";
       return;
     }
 
     const realRole = snap.data().role;
 
-    // 🔥 ROLE CHECK (FIXED)
+    // 🔐 Strict role check
     if(realRole !== selectedRole){
       await signOut(auth);
-      errorMessage.textContent = 
-        "Access denied. You are registered as " + realRole;
+      errorMessage.textContent =
+        "Access denied! This email is registered as " + realRole;
       return;
     }
 
     sessionStorage.setItem("role", realRole);
+    sessionStorage.setItem("uid", result.user.uid);
 
-    window.location.href = "dashboard.html";
+    window.location.replace("dashboard.html");
 
   } catch(err){
     errorMessage.textContent = err.message;
