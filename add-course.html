@@ -72,7 +72,6 @@ button:hover{
   font-weight:600;
 }
 
-/* Mobile Fix */
 @media(max-width:480px){
   .container{
     width:90%;
@@ -112,9 +111,15 @@ import {
   getFirestore, 
   collection, 
   addDoc, 
-  serverTimestamp 
+  serverTimestamp,
+  doc,
+  getDoc
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+/* =========================
+   FIREBASE CONFIG
+========================= */
 
 const firebaseConfig = {
   apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
@@ -129,39 +134,47 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* ✅ Ensure login persists across pages */
+/* ✅ Persistent login */
 await setPersistence(auth, browserLocalPersistence);
 
 /* =========================
-   AUTH + ROLE CHECK FIXED
+   AUTH + REAL ROLE CHECK
 ========================= */
 
-onAuthStateChanged(auth, (user)=>{
+onAuthStateChanged(auth, async (user)=>{
 
-  if(user){
+  if(!user){
+    window.location="login.html";
+    return;
+  }
 
-    const role = localStorage.getItem("role");
+  try{
 
-    if(role !== "teacher"){
-      alert("Access denied! Only teachers can upload courses.");
-      window.location="dashboard.html";
+    const snap = await getDoc(doc(db,"users",user.uid));
+
+    if(!snap.exists()){
+      alert("User account data not found.");
+      window.location="login.html";
+      return;
     }
 
-  } else {
+    const realRole = snap.data().role;
 
-    // Small delay to prevent false redirect
-    setTimeout(()=>{
-      if(!auth.currentUser){
-        window.location="login.html";
-      }
-    },700);
+    if(realRole !== "teacher"){
+      alert("Access denied! Only teachers can upload courses.");
+      window.location="dashboard.html";
+      return;
+    }
 
+  }catch(error){
+    console.error(error);
+    window.location="login.html";
   }
 
 });
 
 /* =========================
-   COURSE UPLOAD (UNCHANGED STYLE)
+   COURSE UPLOAD
 ========================= */
 
 window.addCourse = async function(){
@@ -211,3 +224,4 @@ window.addCourse = async function(){
 
 </body>
 </html>
+
