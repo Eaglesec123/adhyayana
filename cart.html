@@ -45,14 +45,7 @@ import {
   getDoc,
   collection,
   addDoc,
-  serverTimestamp,
-  courseId,
-  teacherId,
-  studentId,
-  amount,
-  teacherRevenue,
-  platformRevenue,
-  createdAt
+  serverTimestamp
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -63,7 +56,7 @@ import {
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
+  apiKey: "YOUR_KEY",
   authDomain: "login-65d4b.firebaseapp.com",
   projectId: "login-65d4b",
   storageBucket: "login-65d4b.appspot.com",
@@ -78,23 +71,96 @@ const auth = getAuth(app);
 let firebaseUser = null;
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
+const main = document.getElementById("main");
+
 /* AUTH CHECK */
 onAuthStateChanged(auth,(user)=>{
   if(user){
     firebaseUser = user;
+    renderCart();   // 🔥 render after auth ready
   } else {
     alert("Login first");
     window.location="login.html";
   }
 });
 
-/* ===== UPDATED CHECKOUT ===== */
+/* ===== RENDER CART ===== */
+
+async function renderCart(){
+
+  if(cart.length === 0){
+    main.innerHTML = `
+      <div class="empty-wrapper">
+        <div class="empty-box">
+          <div class="empty-icon">🛒</div>
+          <h3>Your cart is empty</h3>
+          <button class="browse-btn" onclick="window.location='market.html'">
+            Browse Courses
+          </button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  let html = `<div class="container">
+                <div class="cart-card">`;
+
+  let total = 0;
+
+  for(let item of cart){
+
+    const snap = await getDoc(doc(db,"courses",item.id));
+    const course = snap.data();
+
+    if(!course) continue;
+
+    total += Number(course.price);
+
+    html += `
+      <div class="cart-item">
+        <img src="${course.thumbnail}" alt="">
+        <div class="item-details">
+          <h4>${course.title}</h4>
+          <div class="price">₹${course.price}</div>
+          <button class="remove-btn" onclick="removeItem('${item.id}')">
+            Remove
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  html += `</div>
+
+          <div class="summary">
+            <h3>Order Summary</h3>
+            <p style="margin-top:15px;font-weight:600;">
+              Total: ₹${total}
+            </p>
+            <button class="checkout-btn" onclick="checkout(${total})">
+              Proceed to Checkout
+            </button>
+          </div>
+        </div>`;
+
+  main.innerHTML = html;
+}
+
+/* REMOVE ITEM */
+
+window.removeItem = function(id){
+  cart = cart.filter(item => item.id !== id);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderCart();
+}
+
+/* ===== CHECKOUT ===== */
 
 window.checkout = async function(total){
 
   if(!firebaseUser){
     alert("Login first");
-    window.location="login.html";
     return;
   }
 
@@ -118,24 +184,24 @@ window.checkout = async function(total){
 
       handler: async function(){
 
-        const courseId = cart[0].id;
+        for(let item of cart){
 
-        const snap = await getDoc(doc(db,"courses",courseId));
-        const course = snap.data();
+          const snap = await getDoc(doc(db,"courses",item.id));
+          const course = snap.data();
+          if(!course) continue;
 
-        const amount = Number(course.price);
-        const teacherRevenue = amount * 0.8;
-        const platformRevenue = amount * 0.2;
+          const amount = Number(course.price);
 
-        await addDoc(collection(db,"purchases"),{
-          courseId,
-          teacherId: course.creatorId,
-          studentId: firebaseUser.uid,
-          amount,
-          teacherRevenue,
-          platformRevenue,
-          createdAt: serverTimestamp()
-        });
+          await addDoc(collection(db,"purchases"),{
+            courseId: item.id,
+            teacherId: course.creatorId,
+            studentId: firebaseUser.uid,
+            amount,
+            teacherRevenue: amount * 0.8,
+            platformRevenue: amount * 0.2,
+            createdAt: serverTimestamp()
+          });
+        }
 
         localStorage.removeItem("cart");
         alert("Payment Successful 🎉");
@@ -153,7 +219,9 @@ window.checkout = async function(total){
 
 </script>
 
+
 </body>
 </html>
+
 
 
