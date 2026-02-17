@@ -32,47 +32,50 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-
 document.addEventListener("DOMContentLoaded", () => {
 
   const form = document.querySelector(".signup-form");
-  const googleBtn = document.getElementById("googleSignup");
 
+  form.addEventListener("submit", async (e) => {
 
-  /* ========================
-     EMAIL SIGNUP
-  ========================*/
-  if (form) {
-    form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-      e.preventDefault();
+    const name = document.getElementById("signupName").value;
+    const email = document.getElementById("signupEmail").value;
+    const password = document.getElementById("signupPassword").value;
+    const role = document.getElementById("signupRole").value;
 
-      const name = document.getElementById("signupName").value;
-      const email = document.getElementById("signupEmail").value;
-      const password = document.getElementById("signupPassword").value;
-      const role = document.getElementById("signupRole").value;
+    try {
 
-      try {
+      // Check if email already exists in Firebase
+      const methods = await fetchSignInMethodsForEmail(auth, email);
 
-        const userCred = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCred.user;
-
-        await setDoc(doc(db, "users", user.uid), {
-          name,
-          email,
-          role,
-          createdAt: Date.now()
-        });
-
-        alert("Signup successful!");
-        window.location.href = "login.html";
-
-      } catch (error) {
-        alert(error.message);
+      if (methods.length > 0) {
+        alert("This email is already registered. You cannot change role.");
+        return;
       }
 
-    });
-  }
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCred.user;
+
+      // Save role permanently
+      await setDoc(doc(db, "users", user.uid), {
+        name,
+        email,
+        role,              // 🔒 Locked role
+        createdAt: Date.now()
+      });
+
+      alert("Signup successful!");
+      window.location.href = "login.html";
+
+    } catch (error) {
+      alert(error.message);
+    }
+
+  });
+
+});
 
 
   /* ========================
@@ -111,3 +114,4 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 });
+
