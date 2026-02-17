@@ -58,13 +58,13 @@ document.getElementById("googleLogin")
 
     // Redirect based on role
     if (role === "admin") {
-      window.location.href = "admin-dashboard.html";
+      window.location.href = "admin-analytics.html";
     }
     else if (role === "teacher") {
-      window.location.href = "teacher-dashboard.html";
+      window.location.href = "admin-analytics.html";
     }
     else {
-      window.location.href = "student-dashboard.html";
+      window.location.href = "dashboard.html";
     }
 
   } catch (error) {
@@ -76,4 +76,5 @@ document.getElementById("googleLogin")
   }
 
 });
+
 
