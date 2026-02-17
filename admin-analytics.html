@@ -191,115 +191,63 @@ background:#22c55e;
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeApp } from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
+import { 
+  getAuth, 
+  onAuthStateChanged 
+} from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import { 
+  getFirestore, 
+  doc, 
+  getDoc 
+} from 
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
 
 const firebaseConfig = {
-apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
-authDomain: "login-65d4b.firebaseapp.com",
-projectId: "login-65d4b",
-storageBucket: "login-65d4b.firebasestorage.app",
-messagingSenderId: "239979806578",
-appId: "1:239979806578:web:65db25b7e975ef0f1867eb",
-measurementId: "G-3GT10B4SYM"
+  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
+  authDomain: "login-65d4b.firebaseapp.com",
+  projectId: "login-65d4b",
+  storageBucket: "login-65d4b.appspot.com",
+  messagingSenderId: "239979806578",
+  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* Load Dashboard */
-async function loadDashboard(){
 
-// Courses
-let coursesSnap = await getDocs(collection(db,"courses"));
-document.getElementById("totalCourses").innerText = coursesSnap.size;
+// 🔐 Protect Page
+onAuthStateChanged(auth, async (user) => {
 
-let courseHTML="";
-coursesSnap.forEach(doc=>{
-let data = doc.data();
-courseHTML += `
-<div style="margin-top:15px;">
-<b>${data.title}</b>
-<p style="font-size:13px;color:gray;">₹ ${data.price}</p>
-</div>`;
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  const snap = await getDoc(doc(db, "users", user.uid));
+
+  if (!snap.exists()) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  const role = snap.data().role;
+
+  if (role !== "teacher" && role !== "admin") {
+    // ❌ Block student
+    window.location.href = "dashboard.html";
+  }
+
 });
-document.getElementById("courses").innerHTML = courseHTML;
-
-
-// REAL Earnings from payments collection
-let paySnap = await getDocs(collection(db,"payments"));
-
-let total = 0;
-let sales = 0;
-
-paySnap.forEach(doc=>{
-let pay = doc.data();
-if(pay.status === "success"){
-total += Number(pay.amount);
-sales++;
-}
-});
-
-document.getElementById("totalEarnings").innerText = total;
-document.getElementById("totalSales").innerText = sales;
-
-}
-
-loadDashboard();
-
-/* Upload Course */
-window.uploadCourse = async function(){
-
-let title = document.getElementById("title").value;
-let description = document.getElementById("description").value;
-let price = document.getElementById("price").value;
-let file = document.getElementById("thumbnail").files[0];
-
-if(!title || !description || !price || !file){
-alert("Fill all fields");
-return;
-}
-
-let progressBox = document.getElementById("progressBox");
-let progressBar = document.getElementById("progressBar");
-
-progressBox.style.display="block";
-
-let formData = new FormData();
-formData.append("file",file);
-formData.append("upload_preset","darshan");
-
-let xhr = new XMLHttpRequest();
-xhr.open("POST","https://api.cloudinary.com/v1_1/dlqbfsh92/image/upload");
-
-xhr.upload.addEventListener("progress",(e)=>{
-let percent = (e.loaded/e.total)*100;
-progressBar.style.width = percent+"%";
-});
-
-xhr.onload = async function(){
-
-let res = JSON.parse(xhr.responseText);
-let imageUrl = res.secure_url;
-
-await addDoc(collection(db,"courses"),{
-title,
-description,
-price,
-thumbnail:imageUrl,
-createdAt:Date.now()
-});
-
-document.getElementById("msg").innerText="✅ Course Added";
-progressBox.style.display="none";
-progressBar.style.width="0%";
-
-loadDashboard();
-};
-
-xhr.send(formData);
-};
 
 </script>
+
 </body>
 </html>
+
