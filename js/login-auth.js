@@ -4,9 +4,6 @@ import {
   signInWithEmailAndPassword 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { 
-  getFirestore, 
-  doc, 
-  getDoc,
   getAuth, 
   createUserWithEmailAndPassword,
   fetchSignInMethodsForEmail,
@@ -72,4 +69,5 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     errorMessage.textContent = error.message;
   }
 });
+
 
