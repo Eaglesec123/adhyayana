@@ -1,12 +1,12 @@
 import { initializeApp } from 
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 
 import { 
   getAuth, 
   GoogleAuthProvider, 
   signInWithPopup 
 } from 
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import { 
   getFirestore, 
@@ -14,7 +14,7 @@ import {
   getDoc, 
   setDoc 
 } from 
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
 const firebaseConfig = {
@@ -76,3 +76,4 @@ document.getElementById("googleLogin")
   }
 
 });
+
