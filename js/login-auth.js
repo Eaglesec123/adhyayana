@@ -6,7 +6,12 @@ import {
 import { 
   getFirestore, 
   doc, 
-  getDoc 
+  getDoc,
+  getAuth, 
+  createUserWithEmailAndPassword,
+  fetchSignInMethodsForEmail,
+  GoogleAuthProvider,
+  signInWithPopup
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -67,3 +72,4 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     errorMessage.textContent = error.message;
   }
 });
+
