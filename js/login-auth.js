@@ -68,10 +68,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 🔐 Redirect based on Firestore role
         if(role === "student"){
-          window.location.href = "student-dashboard.html";
+          window.location.href = "dashboard.html";
         }
         else if(role === "teacher"){
-          window.location.href = "admin-dashboard.html";
+          window.location.href = "admin-analytics.html";
         }
         else{
           errorMessage.innerText = "Invalid role.";
@@ -138,5 +138,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 });
+
 
 
