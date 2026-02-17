@@ -65,14 +65,17 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        const role = snap.data().role;
+       const role = snap.data().role;
 
-        if (role === "student") {
-          window.location.href = "dashboard.html";
-        } 
-        else if (role === "teacher" || role === "admin") {
-          window.location.href = "admin-analytics.html";
-        }
+// Ignore dropdown completely
+
+if (role === "student") {
+  window.location.href = "dashboard.html";
+} 
+else if (role === "teacher") {
+  window.location.href = "admin-analytics.html";
+}
+
 
       } catch (error) {
         console.error(error);
@@ -126,3 +129,4 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 });
+
