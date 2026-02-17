@@ -1,100 +1,70 @@
 import { initializeApp } from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-import { 
-  getAuth,
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-  setPersistence,
-  browserLocalPersistence
-} from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword } from 
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-import { 
-  getFirestore,
-  doc,
-  getDoc
-} from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc } from 
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-
-/* ================= FIREBASE CONFIG ================= */
 
 const firebaseConfig = {
   apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
   authDomain: "login-65d4b.firebaseapp.com",
   projectId: "login-65d4b",
-  storageBucket: "login-65d4b.appspot.com",
-  messagingSenderId: "239979806578",
-  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* ================= FORCE LOGIN PERSISTENCE ================= */
 
-await setPersistence(auth, browserLocalPersistence);
+document.getElementById("loginForm")
+.addEventListener("submit", async (e) => {
 
-/* ================= EMAIL LOGIN ================= */
-
-const form = document.getElementById("loginForm");
-const errorMessage = document.getElementById("errorMessage");
-
-form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
-  const role = document.getElementById("loginRole").value;
+  const selectedRole = document.getElementById("loginRole").value;
+  const errorMessage = document.getElementById("errorMessage");
 
   try {
 
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const userCred = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCred.user;
 
-    const user = userCredential.user;
-
-    // Check role from Firestore
+    // 🔥 Get REAL role from Firestore
     const snap = await getDoc(doc(db, "users", user.uid));
 
     if (!snap.exists()) {
-      errorMessage.innerText = "User data missing.";
+      errorMessage.innerText = "User data not found.";
       return;
     }
 
-    const userData = snap.data();
+    const actualRole = snap.data().role;
 
-    if (userData.role !== role) {
-      errorMessage.innerText = "Role mismatch!";
+    // 🚨 Compare selected role with actual role
+    if (selectedRole !== actualRole) {
+
+      await auth.signOut(); // logout immediately
+
+      errorMessage.innerText =
+        "Role mismatch! You are registered as " + actualRole + ".";
+
       return;
     }
 
-    window.location = "dashboard.html";
-
-  } catch (error) {
-    errorMessage.innerText = error.message;
-  }
-
-});
-
-
-/* ================= GOOGLE LOGIN ================= */
-
-const googleBtn = document.getElementById("googleLogin");
-
-googleBtn.addEventListener("click", async () => {
-
-  try {
-
-    const provider = new GoogleAuthProvider();
-
-    const result = await signInWithPopup(auth, provider);
-
-    const user = result.user;
-
-    window.location = "dashboard.html";
+    // ✅ Correct role — Redirect
+    if (actualRole === "admin") {
+      window.location.href = "admin-dashboard.html";
+    }
+    else if (actualRole === "teacher") {
+      window.location.href = "teacher-dashboard.html";
+    }
+    else {
+      window.location.href = "student-dashboard.html";
+    }
 
   } catch (error) {
     errorMessage.innerText = error.message;
