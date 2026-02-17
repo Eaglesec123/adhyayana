@@ -223,33 +223,29 @@ const db = getFirestore(app);
 
 
 // 🔐 Protect Page
-onAuthStateChanged(auth, async (user) => {
+auth.onAuthStateChanged(async (user) => {
 
-  if (!user) {
+  if(!user){
     window.location.href = "login.html";
     return;
   }
 
   const snap = await getDoc(doc(db, "users", user.uid));
 
-  if (!snap.exists()) {
-    window.location.href = "login.html";
-    return;
-  }
-
-  const role = snap.data().role;
-
-  if (role !== "teacher") {
+  if(snap.data().role !== "teacher"){
+    alert("Access Denied");
     window.location.href = "dashboard.html";
   }
 
 });
 
 
+
 </script>
 
 </body>
 </html>
+
 
 
 
