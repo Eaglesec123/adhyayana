@@ -1,144 +1,64 @@
-import { initializeApp } from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
   getAuth, 
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup
-} from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
+  signInWithEmailAndPassword 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { 
   getFirestore, 
   doc, 
-  getDoc,
-  setDoc
-} from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  getDoc 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-
-/* 🔥 Firebase Config */
 const firebaseConfig = {
-  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
-  authDomain: "login-65d4b.firebaseapp.com",
-  projectId: "login-65d4b",
-  storageBucket: "login-65d4b.appspot.com",
-  messagingSenderId: "239979806578",
-  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
+  // your config
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
 
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-document.addEventListener("DOMContentLoaded", () => {
-
-  const form = document.getElementById("loginForm");
-  const googleBtn = document.getElementById("googleLogin");
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const selectedRole = document.getElementById("role").value;
   const errorMessage = document.getElementById("errorMessage");
 
-  /* ==========================
-     EMAIL + PASSWORD LOGIN
-  ===========================*/
-  if (form) {
+  errorMessage.textContent = "";
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      errorMessage.innerText = "";
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
+    const userDoc = await getDoc(doc(db, "users", user.uid));
 
-      try {
+    if (!userDoc.exists()) {
+      errorMessage.textContent = "User data missing.";
+      return;
+    }
 
-        const userCred = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCred.user;
+    const actualRole = userDoc.data().role;
 
-        const snap = await getDoc(doc(db, "users", user.uid));
+    // 🔴 ROLE MISMATCH CHECK
+    if (actualRole !== selectedRole) {
+      errorMessage.textContent = "You are not allowed to login as " + selectedRole;
+      await auth.signOut();   // Important
+      return;                 // STOP redirect
+    }
 
-        if (!snap.exists()) {
-          errorMessage.innerText = "User data not found.";
-          return;
-        }
+    // ✅ ROLE BASED REDIRECT
+    if (actualRole === "admin") {
+      window.location.href = "admin-analytics.html";
+    } 
+    else if (actualRole === "teacher") {
+      window.location.href = "dashboard.html";
+    } 
+    else {
+      window.location.href = "dashboard.html";
+    }
 
-        const role = snap.data().role;
-
-        // 🔐 Redirect based on Firestore role
-        if(role === "student"){
-          window.location.href = "dashboard.html";
-        }
-        else if(role === "teacher"){
-          window.location.href = "admin-analytics.html";
-        }
-        else{
-          errorMessage.innerText = "Invalid role.";
-        }
-
-      } catch (error) {
-        console.error(error);
-        errorMessage.innerText = error.message;
-      }
-
-    });
+  } catch (error) {
+    errorMessage.textContent = error.message;
   }
-
-
-  /* ==========================
-        GOOGLE LOGIN
-  ===========================*/
-  if (googleBtn) {
-
-    googleBtn.addEventListener("click", async () => {
-
-      errorMessage.innerText = "";
-
-      try {
-
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
-
-        const userRef = doc(db, "users", user.uid);
-        let snap = await getDoc(userRef);
-
-        // 🔥 If first time Google login → create student by default
-        if (!snap.exists()) {
-
-          await setDoc(userRef, {
-            name: user.displayName,
-            email: user.email,
-            role: "student", // default role
-            createdAt: Date.now()
-          });
-
-          snap = await getDoc(userRef);
-        }
-
-        const role = snap.data().role;
-
-        // 🔐 Redirect based on saved role
-        if(role === "student"){
-          window.location.href = "dashboard.html";
-        }
-        else if(role === "teacher"){
-          window.location.href = "admin-analytics.html";
-        }
-        else{
-          errorMessage.innerText = "Invalid role.";
-        }
-
-      } catch (error) {
-        console.error("Google Login Error:", error);
-        errorMessage.innerText = error.message;
-      }
-
-    });
-  }
-
 });
-
-
-
-
