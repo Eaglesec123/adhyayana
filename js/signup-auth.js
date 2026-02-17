@@ -4,6 +4,7 @@ import { initializeApp } from
 import { 
   getAuth, 
   createUserWithEmailAndPassword,
+  fetchSignInMethodsForEmail,
   GoogleAuthProvider,
   signInWithPopup
 } from 
@@ -32,56 +33,61 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
+
 document.addEventListener("DOMContentLoaded", () => {
 
   const form = document.querySelector(".signup-form");
+  const googleBtn = document.getElementById("googleSignup");
 
-  form.addEventListener("submit", async (e) => {
 
-    e.preventDefault();
+  /* ========================
+     EMAIL SIGNUP
+  ========================*/
+  if (form) {
+    form.addEventListener("submit", async (e) => {
 
-    const name = document.getElementById("signupName").value;
-    const email = document.getElementById("signupEmail").value;
-    const password = document.getElementById("signupPassword").value;
-    const role = document.getElementById("signupRole").value;
+      e.preventDefault();
 
-    try {
+      const name = document.getElementById("signupName").value;
+      const email = document.getElementById("signupEmail").value;
+      const password = document.getElementById("signupPassword").value;
+      const role = document.getElementById("signupRole").value;
 
-      // Check if email already exists in Firebase
-      const methods = await fetchSignInMethodsForEmail(auth, email);
+      try {
 
-      if (methods.length > 0) {
-        alert("This email is already registered. You cannot change role.");
-        return;
+        // 🔒 Prevent duplicate email
+        const methods = await fetchSignInMethodsForEmail(auth, email);
+        if (methods.length > 0) {
+          alert("This email is already registered.");
+          return;
+        }
+
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCred.user;
+
+        await setDoc(doc(db, "users", user.uid), {
+          name,
+          email,
+          role,   // 🔐 role locked
+          createdAt: Date.now()
+        });
+
+        alert("Signup successful!");
+        window.location.href = "login.html";
+
+      } catch (error) {
+        alert(error.message);
       }
 
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCred.user;
-
-      // Save role permanently
-      await setDoc(doc(db, "users", user.uid), {
-        name,
-        email,
-        role,              // 🔒 Locked role
-        createdAt: Date.now()
-      });
-
-      alert("Signup successful!");
-      window.location.href = "login.html";
-
-    } catch (error) {
-      alert(error.message);
-    }
-
-  });
-
-});
+    });
+  }
 
 
   /* ========================
      GOOGLE SIGNUP
   ========================*/
   if (googleBtn) {
+
     googleBtn.addEventListener("click", async () => {
 
       try {
@@ -92,17 +98,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const userRef = doc(db, "users", user.uid);
         const snap = await getDoc(userRef);
 
-        // If new Google user → create student account
+        // If first time Google user → create as student
         if (!snap.exists()) {
           await setDoc(userRef, {
             name: user.displayName,
             email: user.email,
-            role: "student",  // default role
+            role: "student",
             createdAt: Date.now()
           });
         }
 
-        // After Google signup → redirect
         window.location.href = "dashboard.html";
 
       } catch (error) {
@@ -111,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
     });
+
   }
 
 });
-
