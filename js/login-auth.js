@@ -20,12 +20,12 @@ import {
 
 /* 🔥 Firebase Config */
 const firebaseConfig = {
-  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
-  authDomain: "login-65d4b.firebaseapp.com",
-  projectId: "login-65d4b",
-  storageBucket: "login-65d4b.appspot.com",
-  messagingSenderId: "239979806578",
-  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -40,18 +40,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const googleBtn = document.getElementById("googleLogin");
   const errorMessage = document.getElementById("errorMessage");
 
-
   /* ==========================
      EMAIL + PASSWORD LOGIN
   ===========================*/
   if (form) {
-    form.addEventListener("submit", async (e) => {
 
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
       errorMessage.innerText = "";
 
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
 
       try {
 
@@ -65,17 +64,18 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-       const role = snap.data().role;
+        const role = snap.data().role;
 
-// Ignore dropdown completely
-
-if (role === "student") {
-  window.location.href = "dashboard.html";
-} 
-else if (role === "teacher") {
-  window.location.href = "admin-analytics.html";
-}
-
+        // 🔐 Redirect based on Firestore role
+        if(role === "student"){
+          window.location.href = "student-dashboard.html";
+        }
+        else if(role === "teacher"){
+          window.location.href = "admin-dashboard.html";
+        }
+        else{
+          errorMessage.innerText = "Invalid role.";
+        }
 
       } catch (error) {
         console.error(error);
@@ -90,7 +90,10 @@ else if (role === "teacher") {
         GOOGLE LOGIN
   ===========================*/
   if (googleBtn) {
+
     googleBtn.addEventListener("click", async () => {
+
+      errorMessage.innerText = "";
 
       try {
 
@@ -98,26 +101,32 @@ else if (role === "teacher") {
         const user = result.user;
 
         const userRef = doc(db, "users", user.uid);
-        const snap = await getDoc(userRef);
+        let snap = await getDoc(userRef);
 
-        // If first time login → create student account
+        // 🔥 If first time Google login → create student by default
         if (!snap.exists()) {
+
           await setDoc(userRef, {
             name: user.displayName,
             email: user.email,
-            role: "student",
+            role: "student", // default role
             createdAt: Date.now()
           });
+
+          snap = await getDoc(userRef);
         }
 
-        const updatedSnap = await getDoc(userRef);
-        const role = updatedSnap.data().role;
+        const role = snap.data().role;
 
-        if (role === "student") {
-          window.location.href = "dashboard.html";
-        } 
-        else if (role === "teacher" || role === "admin") {
-          window.location.href = "admin-analytics.html";
+        // 🔐 Redirect based on saved role
+        if(role === "student"){
+          window.location.href = "student-dashboard.html";
+        }
+        else if(role === "teacher"){
+          window.location.href = "admin-dashboard.html";
+        }
+        else{
+          errorMessage.innerText = "Invalid role.";
         }
 
       } catch (error) {
@@ -129,4 +138,3 @@ else if (role === "teacher") {
   }
 
 });
-
