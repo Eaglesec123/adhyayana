@@ -10,7 +10,12 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  // your config
+  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
+  authDomain: "login-65d4b.firebaseapp.com",
+  projectId: "login-65d4b",
+  storageBucket: "login-65d4b.appspot.com",
+  messagingSenderId: "239979806578",
+  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -62,3 +67,4 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     errorMessage.textContent = error.message;
   }
 });
+
