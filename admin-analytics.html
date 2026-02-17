@@ -191,22 +191,16 @@ background:#22c55e;
 
 <script type="module">
 
-import { initializeApp } from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
   getAuth, 
   onAuthStateChanged 
-} from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { 
   getFirestore, 
   doc, 
   getDoc 
-} from 
-"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
@@ -221,22 +215,25 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-
-// 🔐 Protect Page
-auth.onAuthStateChanged(async (user) => {
-
-  if(!user){
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
     window.location.href = "login.html";
     return;
   }
 
-  const snap = await getDoc(doc(db, "users", user.uid));
+  const userDoc = await getDoc(doc(db, "users", user.uid));
 
-  if(snap.data().role !== "teacher"){
+  if (!userDoc.exists()) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  const role = userDoc.data().role;
+
+  if (role !== "admin") {
     alert("Access Denied");
     window.location.href = "dashboard.html";
   }
-
 });
 
 
@@ -245,6 +242,7 @@ auth.onAuthStateChanged(async (user) => {
 
 </body>
 </html>
+
 
 
 
