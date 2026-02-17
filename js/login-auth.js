@@ -3,78 +3,75 @@ import { initializeApp } from
 
 import { 
   getAuth, 
-  GoogleAuthProvider, 
-  signInWithPopup 
+  signInWithEmailAndPassword 
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import { 
   getFirestore, 
   doc, 
-  getDoc, 
-  setDoc 
+  getDoc 
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
+/* 🔥 Firebase Config */
 const firebaseConfig = {
   apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
   authDomain: "login-65d4b.firebaseapp.com",
-  projectId: "login-65d4b"
+  projectId: "login-65d4b",
+  storageBucket: "login-65d4b.appspot.com",
+  messagingSenderId: "239979806578",
+  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const provider = new GoogleAuthProvider();
 
-document.getElementById("googleLogin")
-.addEventListener("click", async () => {
+/* 🚀 Login Form */
+document.addEventListener("DOMContentLoaded", () => {
 
-  try {
+  const form = document.getElementById("loginForm");
+  const errorMessage = document.getElementById("errorMessage");
 
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
+  form.addEventListener("submit", async (e) => {
 
-    const userRef = doc(db, "users", user.uid);
-    const snap = await getDoc(userRef);
+    e.preventDefault();
+    errorMessage.innerText = "";
 
-    // 🔥 If first time Google login → create user
-    if (!snap.exists()) {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
-      await setDoc(userRef, {
-        name: user.displayName,
-        email: user.email,
-        role: "student",   // default role
-        createdAt: Date.now()
-      });
+    try {
 
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCred.user;
+
+      // 🔥 Get real role from Firestore
+      const snap = await getDoc(doc(db, "users", user.uid));
+
+      if (!snap.exists()) {
+        errorMessage.innerText = "User data not found.";
+        return;
+      }
+
+      const role = snap.data().role;
+
+      // ✅ Role-based redirect
+      if (role === "student") {
+        window.location.href = "dashboard.html";
+      } 
+      else if (role === "teacher" || role === "admin") {
+        window.location.href = "admin-analytics.html";
+      }
+
+    } catch (error) {
+      console.error(error);
+      errorMessage.innerText = error.message;
     }
 
-    // Get updated user data
-    const updatedSnap = await getDoc(userRef);
-    const role = updatedSnap.data().role;
-
-    // Redirect based on role
-    if (role === "admin") {
-      window.location.href = "admin-analytics.html";
-    }
-    else if (role === "teacher") {
-      window.location.href = "admin-analytics.html";
-    }
-    else {
-      window.location.href = "dashboard.html";
-    }
-
-  } catch (error) {
-
-    console.error(error);
-    document.getElementById("errorMessage").innerText =
-      "Google login failed: " + error.message;
-
-  }
+  });
 
 });
-
-
