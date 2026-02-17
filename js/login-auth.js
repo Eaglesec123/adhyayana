@@ -1,24 +1,22 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
 import { 
-  getAuth, 
-  signInWithEmailAndPassword 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { 
-  getAuth, 
+  getAuth,
+  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   fetchSignInMethodsForEmail,
   GoogleAuthProvider,
-  signInWithPopup
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  signInWithPopup,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC0HLb1TVf3vJCQEQr2pUOonoXoKnjbrtw",
-  authDomain: "login-65d4b.firebaseapp.com",
-  projectId: "login-65d4b",
-  storageBucket: "login-65d4b.appspot.com",
-  messagingSenderId: "239979806578",
-  appId: "1:239979806578:web:65db25b7e975ef0f1867eb"
-};
+import { 
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -69,5 +67,6 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     errorMessage.textContent = error.message;
   }
 });
+
 
 
