@@ -4,17 +4,15 @@ import { initializeApp } from
 import { 
   getAuth, 
   createUserWithEmailAndPassword,
-  fetchSignInMethodsForEmail
+  GoogleAuthProvider,
+  signInWithPopup
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import { 
   getFirestore,
-  collection,
-  query,
-  where,
-  getDocs,
   doc,
+  getDoc,
   setDoc
 } from 
 "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -32,61 +30,84 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
 
 
 document.addEventListener("DOMContentLoaded", () => {
 
   const form = document.querySelector(".signup-form");
+  const googleBtn = document.getElementById("googleSignup");
 
-  if (!form) {
-    console.error("Signup form not found");
-    return;
+
+  /* ========================
+     EMAIL SIGNUP
+  ========================*/
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+
+      e.preventDefault();
+
+      const name = document.getElementById("signupName").value;
+      const email = document.getElementById("signupEmail").value;
+      const password = document.getElementById("signupPassword").value;
+      const role = document.getElementById("signupRole").value;
+
+      try {
+
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCred.user;
+
+        await setDoc(doc(db, "users", user.uid), {
+          name,
+          email,
+          role,
+          createdAt: Date.now()
+        });
+
+        alert("Signup successful!");
+        window.location.href = "login.html";
+
+      } catch (error) {
+        alert(error.message);
+      }
+
+    });
   }
 
-  form.addEventListener("submit", async (e) => {
 
-    e.preventDefault();
+  /* ========================
+     GOOGLE SIGNUP
+  ========================*/
+  if (googleBtn) {
+    googleBtn.addEventListener("click", async () => {
 
-    const name = document.getElementById("signupName").value;
-    const email = document.getElementById("signupEmail").value;
-    const password = document.getElementById("signupPassword").value;
-    const role = document.getElementById("signupRole").value;
+      try {
 
-    try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
 
-      const methods = await fetchSignInMethodsForEmail(auth, email);
+        const userRef = doc(db, "users", user.uid);
+        const snap = await getDoc(userRef);
 
-      if (methods.length > 0) {
-        alert("This email is already registered. Please login.");
-        return;
+        // If new Google user → create student account
+        if (!snap.exists()) {
+          await setDoc(userRef, {
+            name: user.displayName,
+            email: user.email,
+            role: "student",  // default role
+            createdAt: Date.now()
+          });
+        }
+
+        // After Google signup → redirect
+        window.location.href = "dashboard.html";
+
+      } catch (error) {
+        console.error("Google Signup Error:", error);
+        alert(error.message);
       }
 
-      const q = query(collection(db, "users"), where("email", "==", email));
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        alert("This email is already registered.");
-        return;
-      }
-
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCred.user;
-
-      await setDoc(doc(db, "users", user.uid), {
-        name: name,
-        email: email,
-        role: role,
-        createdAt: Date.now()
-      });
-
-      alert("Signup successful!");
-      window.location.href = "login.html";
-
-    } catch (error) {
-      console.error("Signup error:", error);
-      alert(error.message);
-    }
-
-  });
+    });
+  }
 
 });
