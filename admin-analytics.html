@@ -239,16 +239,17 @@ onAuthStateChanged(auth, async (user) => {
 
   const role = snap.data().role;
 
-  if (role !== "teacher" && role !== "admin") {
-    // ❌ Block student
-    window.location.href = "admin-analytics.html";
+  if (role !== "teacher") {
+    window.location.href = "dashboard.html";
   }
 
 });
+
 
 </script>
 
 </body>
 </html>
+
 
 
