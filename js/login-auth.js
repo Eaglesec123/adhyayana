@@ -25,9 +25,9 @@ const db = getFirestore(app);
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const selectedRole = document.getElementById("role").value;
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const selectedRole = document.getElementById("role").value.trim().toLowerCase();
   const errorMessage = document.getElementById("errorMessage");
 
   errorMessage.textContent = "";
@@ -40,31 +40,30 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
 
     if (!userDoc.exists()) {
       errorMessage.textContent = "User data missing.";
+      await auth.signOut();
       return;
     }
 
-    const actualRole = userDoc.data().role;
+    const actualRole = userDoc.data().role.toLowerCase();
 
-    // 🔴 ROLE MISMATCH CHECK
     if (actualRole !== selectedRole) {
       errorMessage.textContent = "You are not allowed to login as " + selectedRole;
-      await auth.signOut();   // Important
-      return;                 // STOP redirect
+      await auth.signOut();
+      return;
     }
 
-    // ✅ ROLE BASED REDIRECT
+    // Proper redirects
     if (actualRole === "admin") {
-      window.location.href = "admin-analytics.html";
+      window.location.replace("admin-analytics.html");
     } 
     else if (actualRole === "teacher") {
-      window.location.href = "dashboard.html";
+      window.location.replace("teacher-dashboard.html");
     } 
     else {
-      window.location.href = "dashboard.html";
+      window.location.replace("dashboard.html");
     }
 
   } catch (error) {
     errorMessage.textContent = error.message;
   }
 });
-
